@@ -1,0 +1,42 @@
+﻿
+> chain-trace@1.0.0 lint
+> eslint .
+
+
+C:\Users\ganes\Desktop\Chain-Trace\src\contexts\AuthContext.tsx
+   9:49  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  10:37  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  21:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\ganes\Desktop\Chain-Trace\src\lib\hooks.ts
+  79:8  warning  React Hook useEffect has a missing dependency: 'options.orderBy'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\ganes\Desktop\Chain-Trace\src\pages\GraphVisualization.tsx
+  255:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  277:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  309:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  396:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ganes\Desktop\Chain-Trace\src\pages\Home.tsx
+  264:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  301:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ganes\Desktop\Chain-Trace\src\services\csvService.ts
+  145:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ganes\Desktop\Chain-Trace\src\services\exportService.ts
+  56:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ganes\Desktop\Chain-Trace\src\services\functionService.ts
+   9:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ganes\Desktop\Chain-Trace\src\services\realtimeService.ts
+  4:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 19 problems (17 errors, 2 warnings)
+
