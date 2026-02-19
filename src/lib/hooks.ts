@@ -5,7 +5,7 @@ import {
     isSupabaseConfigured,
     type ConnectionTestResult,
 } from './supabase';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+
 
 // ---------------------------------------------------------------------------
 // useSupabaseQuery — generic hook for SELECT queries
@@ -76,7 +76,7 @@ export function useSupabaseQuery<T>(
         return () => {
             cancelled = true;
         };
-    }, [table, options?.select, options?.limit, options?.orderBy?.column, options?.orderBy?.ascending, options?.filters]);
+    }, [table, options?.select, options?.limit, options?.orderBy, options?.filters]);
 
     return state;
 }
@@ -110,7 +110,7 @@ export function useRealtimeSubscription(
     onDelete?: (payload: unknown) => void,
 ) {
     useEffect(() => {
-        const channel: RealtimeChannel = supabase
+        const channel = supabase
             .channel(`${table}-changes`)
             .on(
                 'postgres_changes',

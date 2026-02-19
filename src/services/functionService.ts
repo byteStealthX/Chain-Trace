@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+`import { supabase } from '../lib/supabase';
 
 export interface TransactionAnalysis {
     transaction_id: string;
