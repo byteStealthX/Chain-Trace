@@ -1,6 +1,5 @@
 import {
     fetchGraphData,
-    type AnalysisResult,
     type SuspiciousAccount,
 } from './analysisService';
 
@@ -65,7 +64,7 @@ export function validateExportPayload(payload: ExportPayload): string[] {
         errors.push('suspicious_accounts must be an array');
     } else {
         let prevScore = Infinity;
-        payload.suspicious_accounts.forEach((sa, idx) => {
+        payload.suspicious_accounts.forEach((sa) => {
             if (typeof sa.suspicion_score !== 'number') {
                 errors.push(`Account ${sa.account_id}: suspicion_score must be a float`);
             }

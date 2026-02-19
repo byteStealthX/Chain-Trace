@@ -15,7 +15,6 @@ import {
     uploadToSupabase,
     type ParseResult,
     type ValidationResult,
-    type UploadResult,
 } from '../services/csvService';
 import {
     analyzeTransactions,
@@ -31,7 +30,6 @@ export default function Home() {
     const [isDragging, setIsDragging] = useState(false);
     const [parseResult, setParseResult] = useState<ParseResult | null>(null);
     const [validation, setValidation] = useState<ValidationResult | null>(null);
-    const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +44,6 @@ export default function Home() {
         setFile(selectedFile);
         setStage('parsing');
         setErrorMsg('');
-        setUploadResult(null);
 
         try {
             const parsed = await parseCsvFile(selectedFile);
@@ -75,8 +72,7 @@ export default function Home() {
 
         setStage('uploading');
         try {
-            const result = await uploadToSupabase(file, validation.validRows);
-            setUploadResult(result);
+            await uploadToSupabase(file, validation.validRows);
 
             // ── Trigger Analysis Progress Interface ────────────────────────
             setStage('analyzing');
@@ -107,7 +103,6 @@ export default function Home() {
         setFile(null);
         setParseResult(null);
         setValidation(null);
-        setUploadResult(null);
         setErrorMsg('');
         if (inputRef.current) inputRef.current.value = '';
     };
