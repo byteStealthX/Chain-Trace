@@ -223,14 +223,13 @@ function detectCircularRouting(
 function detectSmurfing(transactions: Transaction[]): FraudRing[] {
     const rings: FraudRing[] = [];
     const WINDOW_MS = 72 * 60 * 60 * 1000; // 72 hours
-    const MIN_COUNTERPARTIES = 10;
+    const MIN_COUNTERPARTIES = 8; // Adjust threshold as needed
 
-    // Sort transactions by timestamp
     const sorted = [...transactions].sort(
         (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
-    // ── Fan-in: many senders → one receiver within 72h ────────────────
+    // ── Fan-in: many senders → one receiver ──────────────────────────
     const receiverGroups = new Map<string, Transaction[]>();
     for (const tx of sorted) {
         if (!receiverGroups.has(tx.receiver_id)) receiverGroups.set(tx.receiver_id, []);
@@ -238,46 +237,40 @@ function detectSmurfing(transactions: Transaction[]): FraudRing[] {
     }
 
     for (const [receiver, txs] of receiverGroups) {
-        // Sliding window
         for (let i = 0; i < txs.length; i++) {
             const windowStart = new Date(txs[i].timestamp).getTime();
             const windowEnd = windowStart + WINDOW_MS;
 
-            const windowTxs = txs.filter((t) => {
-                const ts = new Date(t.timestamp).getTime();
-                return ts >= windowStart && ts <= windowEnd;
-            });
+            const windowTxs = [];
+            const senders = new Set<string>();
+            let totalAmount = 0;
 
-            const uniqueSenders = new Set(windowTxs.map((t) => t.sender_id));
+            for (let j = i; j < txs.length; j++) {
+                const ts = new Date(txs[j].timestamp).getTime();
+                if (ts > windowEnd) break;
+                windowTxs.push(txs[j]);
+                senders.add(txs[j].sender_id);
+                totalAmount += txs[j].amount;
+            }
 
-            if (uniqueSenders.size >= MIN_COUNTERPARTIES) {
-                const senderList = Array.from(uniqueSenders);
-                const totalAmount = windowTxs.reduce((sum, t) => sum + t.amount, 0);
-                const windowHours = Math.round(
-                    ((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10
-                ) / 10;
-
+            if (senders.size >= MIN_COUNTERPARTIES) {
+                const windowHours = Math.round(((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10) / 10;
                 rings.push({
                     ring_type: 'smurfing_fan_in',
-                    severity: uniqueSenders.size >= 15 ? 'critical' : 'high',
-                    accounts: [receiver, ...senderList],
-                    transactions: windowTxs.map((t) => t.id),
+                    severity: totalAmount > 10000 ? 'critical' : totalAmount > 5000 ? 'high' : 'medium',
+                    accounts: [receiver, ...Array.from(senders)],
+                    transactions: windowTxs.map(t => t.id),
                     window_hours: windowHours,
                     total_amount: Math.round(totalAmount * 100) / 100,
-                    description: `Smurfing (fan-in): ${uniqueSenders.size} unique senders → ${receiver} within ${windowHours}h ($${totalAmount.toFixed(2)} total)`,
-                    details: {
-                        receiver,
-                        sender_count: uniqueSenders.size,
-                        senders: senderList,
-                        transaction_count: windowTxs.length,
-                    },
+                    description: `Smurfing (fan-in): ${senders.size} senders → ${receiver} within ${windowHours}h ($${totalAmount.toFixed(2)} total)`,
+                    details: { member_count: senders.size, window_hours: 72 }
                 });
-                break; // One detection per receiver to avoid duplicates
+                i += windowTxs.length - 1; // Move past this window
             }
         }
     }
 
-    // ── Fan-out: one sender → many receivers within 72h ───────────────
+    // ── Fan-out: one sender → many receivers ─────────────────────────
     const senderGroups = new Map<string, Transaction[]>();
     for (const tx of sorted) {
         if (!senderGroups.has(tx.sender_id)) senderGroups.set(tx.sender_id, []);
@@ -289,36 +282,31 @@ function detectSmurfing(transactions: Transaction[]): FraudRing[] {
             const windowStart = new Date(txs[i].timestamp).getTime();
             const windowEnd = windowStart + WINDOW_MS;
 
-            const windowTxs = txs.filter((t) => {
-                const ts = new Date(t.timestamp).getTime();
-                return ts >= windowStart && ts <= windowEnd;
-            });
+            const windowTxs = [];
+            const receivers = new Set<string>();
+            let totalAmount = 0;
 
-            const uniqueReceivers = new Set(windowTxs.map((t) => t.receiver_id));
+            for (let j = i; j < txs.length; j++) {
+                const ts = new Date(txs[j].timestamp).getTime();
+                if (ts > windowEnd) break;
+                windowTxs.push(txs[j]);
+                receivers.add(txs[j].receiver_id);
+                totalAmount += txs[j].amount;
+            }
 
-            if (uniqueReceivers.size >= MIN_COUNTERPARTIES) {
-                const receiverList = Array.from(uniqueReceivers);
-                const totalAmount = windowTxs.reduce((sum, t) => sum + t.amount, 0);
-                const windowHours = Math.round(
-                    ((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10
-                ) / 10;
-
+            if (receivers.size >= MIN_COUNTERPARTIES) {
+                const windowHours = Math.round(((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10) / 10;
                 rings.push({
                     ring_type: 'smurfing_fan_out',
-                    severity: uniqueReceivers.size >= 15 ? 'critical' : 'high',
-                    accounts: [sender, ...receiverList],
-                    transactions: windowTxs.map((t) => t.id),
+                    severity: totalAmount > 10000 ? 'critical' : totalAmount > 5000 ? 'high' : 'medium',
+                    accounts: [sender, ...Array.from(receivers)],
+                    transactions: windowTxs.map(t => t.id),
                     window_hours: windowHours,
                     total_amount: Math.round(totalAmount * 100) / 100,
-                    description: `Smurfing (fan-out): ${sender} → ${uniqueReceivers.size} unique receivers within ${windowHours}h ($${totalAmount.toFixed(2)} total)`,
-                    details: {
-                        sender,
-                        receiver_count: uniqueReceivers.size,
-                        receivers: receiverList,
-                        transaction_count: windowTxs.length,
-                    },
+                    description: `Smurfing (fan-out): ${sender} → ${receivers.size} receivers within ${windowHours}h ($${totalAmount.toFixed(2)} total)`,
+                    details: { member_count: receivers.size, window_hours: 72 }
                 });
-                break;
+                i += windowTxs.length - 1;
             }
         }
     }
@@ -507,6 +495,29 @@ function computeSuspicionScores(
             const s = getScore(accId);
             // Scale: 5 tx = 1×, 10 tx = 2×, etc.
             s.velocity += SCORE_WEIGHTS.velocity * (maxInWindow / VELOCITY_THRESHOLD);
+        }
+    }
+
+    // ── Apply Merchant Reduction Logic (False Positive Mitigation) ───
+    const MERCHANT_DEGREE_THRESHOLD = 15; // High degree nodes
+    const MERCHANT_REDUCTION_FACTOR = 0.4; // Reduce velocity/fan scores by 60%
+
+    for (const [accId, s] of scores) {
+        const node = nodeMap.get(accId);
+        if (!node) continue;
+
+        const totalDegree = node.in_degree + node.out_degree;
+
+        // Profile: High transaction count but NO critical patterns (Cycles or Shells)
+        const isHighVolumeStable = totalDegree >= MERCHANT_DEGREE_THRESHOLD &&
+            s.cycle === 0 &&
+            s.shell === 0;
+
+        if (isHighVolumeStable) {
+            // Legitimate high-traffic node (e.g. merchant or utility)
+            // Reduce scores that are common in high-traffic but often benign
+            s.velocity *= MERCHANT_REDUCTION_FACTOR;
+            s.fan *= MERCHANT_REDUCTION_FACTOR;
         }
     }
 

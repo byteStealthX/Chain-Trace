@@ -18,6 +18,8 @@ import {
     type FraudRing,
     type SuspiciousAccount,
 } from '../services/analysisService';
+import { subscribeToTransactions } from '../services/realtimeService';
+import { resetDb, generateReport } from '../services/functionService';
 
 // ── Helpers ───────────────────────────────────────────────────────────
 const PATTERN_LABELS: Record<string, { label: string; color: string; icon: string }> = {
@@ -43,7 +45,39 @@ export default function Dashboard() {
     const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
     const [suspiciousAccounts, setSuspiciousAccounts] = useState<SuspiciousAccount[]>([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // ── Actions ─────────────────────────────────────────────────────────
+    const handleReset = async () => {
+        if (!confirm('Are you sure you want to delete ALL data?')) return;
+        setActionLoading(true);
+        const res = await resetDb();
+        if (res.success) {
+            await loadData();
+        } else {
+            alert('Failed to reset: ' + res.error);
+        }
+        setActionLoading(false);
+    };
+
+    const handleReport = async () => {
+        setActionLoading(true);
+        const report = await generateReport();
+        if (report) {
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fraud-report-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert('Failed to generate report');
+        }
+        setActionLoading(false);
+    };
     const [expandedRing, setExpandedRing] = useState<number | null>(null);
     const [sortField, setSortField] = useState<'severity' | 'members' | 'amount'>('severity');
     const [sortAsc, setSortAsc] = useState(false);
@@ -71,6 +105,19 @@ export default function Dashboard() {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    // ── Realtime Subscription ───────────────────────────────────────────
+    useEffect(() => {
+        const subscription = subscribeToTransactions((newTransaction) => {
+            // Optional: Show toast or just silence refresh
+            console.log('New transaction received:', newTransaction);
+            loadData();
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [loadData]);
 
     // ── Sort/filter ring data ───────────────────────────────────────────
     const rings = analysis?.fraud_rings ?? [];
@@ -160,21 +207,40 @@ export default function Dashboard() {
     return (
         <div className="animate-fade-in-up space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold gradient-text mb-2">Dashboard</h1>
+                    <h1 className="text-4xl font-bold gradient-text mb-2">
+                        Fraud Detection Dashboard
+                    </h1>
                     <p className="text-gray-400">
-                        Overview of detected fraud rings and suspicious activity
+                        Real-time analysis of transaction patterns and risk scoring.
                     </p>
                 </div>
-                <button
-                    onClick={loadData}
-                    disabled={loading}
-                    className="flex items-center gap-2 rounded-lg bg-violet-500/15 px-5 py-2.5 text-sm font-medium text-violet-300 transition-all hover:bg-violet-500/25 disabled:opacity-50"
-                >
-                    <HiOutlineRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleReset}
+                        disabled={loading || actionLoading}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                    >
+                        {actionLoading ? 'Processing...' : 'Reset DB'}
+                    </button>
+                    <button
+                        onClick={handleReport}
+                        disabled={loading || actionLoading}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                    >
+                        <HiOutlineExternalLink className="h-5 w-5" />
+                        Download Report
+                    </button>
+                    <button
+                        onClick={loadData}
+                        disabled={loading || actionLoading}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition-colors disabled:opacity-50"
+                    >
+                        <HiOutlineRefresh className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Stats cards */}

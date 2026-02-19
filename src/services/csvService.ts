@@ -1,6 +1,8 @@
 import Papa from 'papaparse';
 import { supabase } from '../lib/supabase';
 import { analysisCache } from '../lib/analysisCache';
+import { uploadCsvToStorage } from './storageService';
+import { analyzeTransactionsBatch } from './functionService';
 
 // ---------------------------------------------------------------------------
 // Required CSV headers — upload will be rejected if any are missing
@@ -47,13 +49,14 @@ export interface UploadResult {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Parse CSV file using PapaParse
+// 1. Parse CSV file using PapaParse (Worker Thread for Performance)
 // ---------------------------------------------------------------------------
 export function parseCsvFile(file: File): Promise<ParseResult> {
     return new Promise((resolve, reject) => {
         Papa.parse<CsvRow>(file, {
             header: true,
             skipEmptyLines: true,
+            worker: true, // Offload parsing to a web worker
             transformHeader: (header) => header.trim().toLowerCase().replace(/\s+/g, '_'),
             complete: (results) => {
                 resolve({
@@ -136,59 +139,110 @@ async function ensureAccounts(accountIds: string[]): Promise<void> {
         risk_level: 'safe' as const,
     }));
 
-    const { error } = await supabase
-        .from('accounts')
-        .upsert(accountRecords, { onConflict: 'account_id', ignoreDuplicates: true });
+    // Upsert in batches of 5000 to maximize throughput (Supabase limit is high)
+    const BATCH_SIZE = 5000;
+    const CONCURRENCY_LIMIT = 5;
+    const batches: any[][] = [];
 
-    if (error) {
-        console.warn('Account upsert warning:', error.message);
+    for (let i = 0; i < accountRecords.length; i += BATCH_SIZE) {
+        batches.push(accountRecords.slice(i, i + BATCH_SIZE));
+    }
+
+    // Process batches with concurrency
+    for (let i = 0; i < batches.length; i += CONCURRENCY_LIMIT) {
+        const chunk = batches.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(chunk.map(async (batch) => {
+            const { error } = await supabase
+                .from('accounts')
+                .upsert(batch, { onConflict: 'account_id', ignoreDuplicates: true });
+
+            if (error) {
+                console.warn('Account upsert warning:', error.message);
+            }
+        }));
     }
 }
 
 // ---------------------------------------------------------------------------
-// 4. Insert validated rows into Supabase transactions table
+// 4. Insert validated rows into Supabase transactions table (Concurrent Batches)
 // ---------------------------------------------------------------------------
 export async function uploadToSupabase(
+    file: File,
     validRows: CsvRow[],
-    batchSize = 200
+    batchSize = 1000
 ): Promise<UploadResult> {
     const start = performance.now();
     let recordsInserted = 0;
     let recordsFailed = 0;
     const errors: string[] = [];
 
+    // 0. Upload raw file to Storage (Fire-and-forget to not block)
+    uploadCsvToStorage(file).catch(err => console.error('Background storage upload failed:', err));
+
     // First ensure all referenced accounts exist
     const allAccountIds = validRows.flatMap((r) => [r.sender_id, r.receiver_id]);
     await ensureAccounts(allAccountIds);
 
-    // Insert transactions in batches
+    // Prepare batches
+    const batches: any[][] = [];
     for (let i = 0; i < validRows.length; i += batchSize) {
-        const batch = validRows.slice(i, i + batchSize);
-
-        const records = batch.map((row) => ({
-            transaction_ref: row.transaction_id.trim(),
+        const batch = validRows.slice(i, i + batchSize).map((row) => ({
+            transaction_id: row.transaction_id.trim(),
             sender_id: row.sender_id.trim(),
             receiver_id: row.receiver_id.trim(),
             amount: parseFloat(row.amount),
             currency: 'USD',
             timestamp: new Date(row.timestamp).toISOString(),
             description: (row as Record<string, string>).description?.trim() || null,
+            // Default values, will be enriched by Edge Function
             risk_score: 0,
             is_flagged: false,
         }));
-
-        const { error, data } = await supabase
-            .from('transactions')
-            .insert(records)
-            .select('id');
-
-        if (error) {
-            errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error.message}`);
-            recordsFailed += batch.length;
-        } else {
-            recordsInserted += data?.length ?? batch.length;
-        }
+        batches.push(batch);
     }
+
+    // Process batches with concurrency limit (e.g., 5 concurrent requests)
+    const CONCURRENCY_LIMIT = 5;
+    const results: Array<{ error: any; count: number }> = [];
+
+    for (let i = 0; i < batches.length; i += CONCURRENCY_LIMIT) {
+        const chunk = batches.slice(i, i + CONCURRENCY_LIMIT);
+        const promises = chunk.map(async (records) => {
+            // 1. Analyze with Edge Function
+            const analyzed = await analyzeTransactionsBatch(records);
+
+            // Merge analysis results
+            const enrichedRecords = records.map(r => {
+                const analysis = analyzed.find(a => a.transaction_id === r.transaction_id);
+                return {
+                    ...r,
+                    risk_score: analysis?.risk_score ?? 0,
+                    is_flagged: analysis?.is_flagged ?? false
+                };
+            });
+
+            // 2. Insert to DB
+            const { error, data } = await supabase
+                .from('transactions')
+                .insert(enrichedRecords)
+                .select('id');
+
+            if (error) return { error: error.message, count: records.length };
+            return { error: null, count: data?.length ?? records.length };
+        });
+
+        const chunkResults = await Promise.all(promises);
+        results.push(...chunkResults);
+    }
+
+    results.forEach((res, index) => {
+        if (res.error) {
+            errors.push(`Batch ${index + 1}: ${res.error}`);
+            recordsFailed += res.count;
+        } else {
+            recordsInserted += res.count;
+        }
+    });
 
     const uploadResult = {
         success: recordsFailed === 0 && recordsInserted > 0,
@@ -198,7 +252,7 @@ export async function uploadToSupabase(
         duration_ms: Math.round(performance.now() - start),
     };
 
-    // Invalidate analysis cache after successful upload so pages re-analyze
+    // Invalidate analysis cache after successful upload
     if (uploadResult.success) {
         analysisCache.invalidate();
     }

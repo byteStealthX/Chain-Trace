@@ -309,3 +309,109 @@ export async function analyzeTransactionsLocal(
         };
     }
 }
+
+// ---------------------------------------------------------------------------
+// Fetch full graph data from DB (Transactions + Analysis Results)
+// ---------------------------------------------------------------------------
+export async function fetchGraphData(
+    filters?: AnalysisFilters
+): Promise<{ data: AnalysisResult | null; error: string | null }> {
+    try {
+        // 1. Fetch Transactions
+        let txQuery = supabase
+            .from('transactions')
+            .select('id, sender_id, receiver_id, amount, timestamp, risk_score, is_flagged')
+            .order('timestamp', { ascending: true });
+
+        if (filters?.limit) txQuery = txQuery.limit(filters.limit);
+        if (filters?.date_from) txQuery = txQuery.gte('timestamp', filters.date_from);
+        if (filters?.date_to) txQuery = txQuery.lte('timestamp', filters.date_to);
+
+        // 2. Fetch Suspicious Accounts
+        const saQuery = supabase
+            .from('suspicious_accounts')
+            .select('*')
+            .order('suspicion_score', { ascending: false });
+
+        // 3. Fetch Fraud Rings
+        const frQuery = supabase
+            .from('fraud_rings')
+            .select('*');
+
+        const [txRes, saRes, frRes] = await Promise.all([txQuery, saQuery, frQuery]);
+
+        if (txRes.error) throw new Error('Failed to fetch transactions: ' + txRes.error.message);
+        if (saRes.error) throw new Error('Failed to fetch analysis: ' + saRes.error.message);
+        if (frRes.error) throw new Error('Failed to fetch rings: ' + frRes.error.message);
+
+        const transactions = txRes.data || [];
+        const suspiciousAccounts = (saRes.data || []) as SuspiciousAccount[];
+        const fraudRings = (frRes.data || []) as FraudRing[];
+
+        // 4. Build Graph Objects
+        const nodeMap = new Map<string, GraphNode>();
+        const edges: GraphEdge[] = [];
+        let totalVolume = 0;
+
+        function getNode(id: string): GraphNode {
+            let n = nodeMap.get(id);
+            if (!n) {
+                n = {
+                    id, label: id, in_degree: 0, out_degree: 0,
+                    total_sent: 0, total_received: 0,
+                    transaction_count: 0, avg_risk_score: 0, is_flagged: false,
+                };
+                nodeMap.set(id, n);
+            }
+            return n;
+        }
+
+        for (const tx of transactions) {
+            const sender = getNode(tx.sender_id);
+            const receiver = getNode(tx.receiver_id);
+
+            sender.out_degree++; sender.total_sent += tx.amount;
+            sender.transaction_count++; if (tx.is_flagged) sender.is_flagged = true;
+
+            receiver.in_degree++; receiver.total_received += tx.amount;
+            receiver.transaction_count++; if (tx.is_flagged) receiver.is_flagged = true;
+
+            // Edges
+            edges.push({
+                id: tx.id, source: tx.sender_id, target: tx.receiver_id,
+                amount: tx.amount, timestamp: tx.timestamp,
+                risk_score: tx.risk_score, is_flagged: tx.is_flagged,
+            });
+            totalVolume += tx.amount;
+        }
+
+        const nodes = Array.from(nodeMap.values());
+
+        // 5. Assemble Result
+        const result: AnalysisResult = {
+            nodes,
+            edges,
+            fraud_rings: fraudRings,
+            suspicious_accounts: suspiciousAccounts,
+            node_count: nodes.length,
+            edge_count: edges.length,
+            fraud_ring_count: fraudRings.length,
+            suspicious_account_count: suspiciousAccounts.length,
+            circular_routing_count: fraudRings.filter(r => r.ring_type === 'circular_routing').length,
+            smurfing_count: fraudRings.filter(r => r.ring_type.startsWith('smurfing')).length,
+            shell_network_count: fraudRings.filter(r => r.ring_type === 'layered_shell_network').length,
+            total_volume: Math.round(totalVolume * 100) / 100,
+            flagged_edges: edges.filter(e => e.is_flagged).length,
+            flagged_nodes: nodes.filter(n => n.is_flagged).length,
+            analysis_timestamp: new Date().toISOString(),
+        };
+
+        return { data: result, error: null };
+
+    } catch (err) {
+        return {
+            data: null,
+            error: err instanceof Error ? err.message : 'Error fetching graph data',
+        };
+    }
+}

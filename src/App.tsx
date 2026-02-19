@@ -1,9 +1,12 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import Home from './pages/Home';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import AuthGuard from './components/auth/AuthGuard';
 
 // ── Lazy-loaded heavy pages (code-split to reduce initial bundle) ─────
+const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const GraphView = lazy(() => import('./pages/GraphView'));
 const Reports = lazy(() => import('./pages/Reports'));
@@ -19,16 +22,28 @@ function PageLoader() {
 export default function App() {
     return (
         <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-                <Routes>
-                    <Route element={<Layout />}>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/graph" element={<GraphView />} />
-                        <Route path="/reports" element={<Reports />} />
-                    </Route>
-                </Routes>
-            </Suspense>
+            <AuthProvider>
+                <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+
+                        {/* Protected Routes */}
+                        <Route element={
+                            <AuthGuard>
+                                <Layout />
+                            </AuthGuard>
+                        }>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/graph" element={<GraphView />} />
+                            <Route path="/reports" element={<Reports />} />
+                        </Route>
+
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Suspense>
+            </AuthProvider>
         </BrowserRouter>
     );
 }

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     HiOutlineCloudUpload,
     HiOutlineDocumentText,
@@ -16,11 +17,15 @@ import {
     type ValidationResult,
     type UploadResult,
 } from '../services/csvService';
+import {
+    analyzeTransactions,
+} from '../services/analysisService';
 import ConnectionStatus from '../components/ui/ConnectionStatus';
 
-type Stage = 'idle' | 'parsing' | 'validated' | 'uploading' | 'done' | 'error';
+type Stage = 'idle' | 'parsing' | 'validated' | 'uploading' | 'analyzing' | 'done' | 'error';
 
 export default function Home() {
+    const navigate = useNavigate();
     const [stage, setStage] = useState<Stage>('idle');
     const [file, setFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -66,18 +71,35 @@ export default function Home() {
 
     // ── Upload validated rows to Supabase ────────────────────────────────
     const handleUpload = useCallback(async () => {
-        if (!validation || validation.validRows.length === 0) return;
+        if (!validation || validation.validRows.length === 0 || !file) return;
 
         setStage('uploading');
         try {
-            const result = await uploadToSupabase(validation.validRows);
+            const result = await uploadToSupabase(file, validation.validRows);
             setUploadResult(result);
-            setStage('done');
+
+            // ── Trigger Analysis Progress Interface ────────────────────────
+            setStage('analyzing');
+
+            // Invoke the fraud detection engine
+            const { error: analysisError } = await analyzeTransactions({ limit: 5000 });
+
+            if (analysisError) {
+                setErrorMsg(`Analysis failed: ${analysisError}`);
+                setStage('error');
+                return;
+            }
+
+            // Success: Short delay for effect then redirect
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1500);
+
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : 'Upload failed');
             setStage('error');
         }
-    }, [validation]);
+    }, [validation, file, navigate]);
 
     // ── Reset everything ─────────────────────────────────────────────────
     const reset = () => {
@@ -101,7 +123,7 @@ export default function Home() {
     };
 
     return (
-        <div className="animate-fade-in-up space-y-8">
+        <div className="animate-fade-in-up space-y-8 relative min-h-[60vh]">
             {/* Page header */}
             <div>
                 <h1 className="text-4xl font-bold gradient-text mb-2">
@@ -126,8 +148,8 @@ export default function Home() {
                     onDrop={onDrop}
                     onClick={() => inputRef.current?.click()}
                     className={`group relative cursor-pointer rounded-2xl border-2 border-dashed p-16 text-center transition-all duration-300 ${isDragging
-                            ? 'border-violet-400 bg-violet-500/10 shadow-lg shadow-violet-500/10 scale-[1.01]'
-                            : 'border-white/10 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/5'
+                        ? 'border-violet-400 bg-violet-500/10 shadow-lg shadow-violet-500/10 scale-[1.01]'
+                        : 'border-white/10 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/5'
                         }`}
                 >
                     <input
@@ -140,8 +162,8 @@ export default function Home() {
                     <div className="flex flex-col items-center gap-4">
                         <div
                             className={`flex h-20 w-20 items-center justify-center rounded-2xl transition-all duration-300 ${isDragging
-                                    ? 'bg-violet-500/20 text-violet-300 scale-110'
-                                    : 'bg-white/5 text-gray-400 group-hover:bg-violet-500/10 group-hover:text-violet-300'
+                                ? 'bg-violet-500/20 text-violet-300 scale-110'
+                                : 'bg-white/5 text-gray-400 group-hover:bg-violet-500/10 group-hover:text-violet-300'
                                 }`}
                         >
                             <HiOutlineCloudUpload className="h-10 w-10" />
@@ -244,7 +266,7 @@ export default function Home() {
                                 ⚠️ Skipped Rows ({validation.invalidRows.length})
                             </h4>
                             <div className="max-h-32 overflow-y-auto space-y-1">
-                                {validation.invalidRows.slice(0, 10).map((r) => (
+                                {validation.invalidRows.slice(0, 10).map((r: any) => (
                                     <p key={r.row} className="text-xs text-amber-300/70">
                                         Row {r.row}: {r.reason}
                                     </p>
@@ -270,7 +292,7 @@ export default function Home() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-white/5">
-                                        {parseResult.headers.slice(0, 6).map((h) => (
+                                        {parseResult.headers.slice(0, 6).map((h: string) => (
                                             <th
                                                 key={h}
                                                 className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
@@ -281,12 +303,12 @@ export default function Home() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {validation.validRows.slice(0, 10).map((row, i) => (
+                                    {validation.validRows.slice(0, 10).map((row: any, i: number) => (
                                         <tr
                                             key={i}
                                             className="hover:bg-white/[0.02] transition-colors"
                                         >
-                                            {parseResult.headers.slice(0, 6).map((h) => (
+                                            {parseResult.headers.slice(0, 6).map((h: string) => (
                                                 <td key={h} className="px-4 py-2.5 text-gray-300 text-xs">
                                                     {(row as Record<string, string>)[h] ?? '—'}
                                                 </td>
@@ -315,75 +337,42 @@ export default function Home() {
                 </div>
             )}
 
-            {/* ── Success state ─────────────────────────────────────────── */}
-            {stage === 'done' && uploadResult && (
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15 flex-shrink-0">
-                            <HiOutlineCheckCircle className="h-6 w-6 text-emerald-400" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-xl font-bold text-emerald-300">
-                                Upload Successful
-                            </h3>
-                            <p className="text-sm text-emerald-300/70 mt-1">
-                                Transaction data has been inserted into Supabase
-                            </p>
-
-                            {/* Stats grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
-                                <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
-                                    <p className="text-2xl font-bold text-white">
-                                        {uploadResult.recordsInserted}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">Records Inserted</p>
-                                </div>
-                                <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
-                                    <p className="text-2xl font-bold text-white">
-                                        {uploadResult.recordsFailed}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">Failed</p>
-                                </div>
-                                <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
-                                    <p className="text-2xl font-bold text-white">
-                                        {uploadResult.duration_ms}ms
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">Duration</p>
-                                </div>
-                                <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
-                                    <p className="text-2xl font-bold text-white">
-                                        {parseResult?.totalRows ?? 0}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">Total Parsed</p>
-                                </div>
+            {/* ── Analyzing state (Full Screen Overlay) ────────────────── */}
+            {stage === 'analyzing' && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0a0a0c]/80 backdrop-blur-md animate-fade-in">
+                    <div className="max-w-md w-full px-8 text-center">
+                        <div className="relative mb-8 flex justify-center">
+                            {/* Premium animated progress indicator */}
+                            <div className="h-24 w-24 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <HiOutlineRefresh className="h-8 w-8 text-violet-400 animate-pulse" />
                             </div>
-
-                            {/* Errors if any */}
-                            {uploadResult.errors.length > 0 && (
-                                <div className="mt-4 rounded-xl bg-amber-500/5 border border-amber-500/20 p-3">
-                                    <p className="text-xs font-medium text-amber-300 mb-1">Warnings:</p>
-                                    {uploadResult.errors.map((e, i) => (
-                                        <p key={i} className="text-xs text-amber-300/70">{e}</p>
-                                    ))}
-                                </div>
-                            )}
                         </div>
-                    </div>
 
-                    <div className="mt-6 flex gap-3">
-                        <button
-                            onClick={reset}
-                            className="rounded-lg bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
-                        >
-                            Upload Another File
-                        </button>
-                        <a
-                            href="/dashboard"
-                            className="rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 transition-all"
-                        >
-                            Go to Dashboard →
-                        </a>
+                        <h2 className="text-2xl font-bold text-white mb-2">Analyzing transaction network...</h2>
+                        <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                            Detecting money muling patterns, circular routing, and smurfing rings across {validation?.validRows.length} records.
+                        </p>
+
+                        {/* Progress bar */}
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-violet-600 to-cyan-500 animate-progress" />
+                        </div>
+                        <p className="text-[10px] uppercase tracking-widest text-gray-600 mt-4 font-semibold">
+                            Processing Graph Algortihms
+                        </p>
                     </div>
+                </div>
+            )}
+
+            {/* ── Done state (Optional, usually we redirect) ───────────── */}
+            {stage === 'done' && (
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-12 text-center">
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 mb-4">
+                        <HiOutlineCheckCircle className="h-7 w-7 text-emerald-400" />
+                    </div>
+                    <p className="text-lg font-semibold text-white">Complete!</p>
+                    <p className="text-sm text-gray-500 mt-1">Redirecting to Dashboard…</p>
                 </div>
             )}
         </div>

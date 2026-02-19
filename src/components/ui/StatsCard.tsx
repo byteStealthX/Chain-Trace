@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 interface StatsCardProps {
     title: string;
@@ -9,7 +9,7 @@ interface StatsCardProps {
     accent?: string;
 }
 
-export default function StatsCard({
+function StatsCardComponent({
     title,
     value,
     subtitle,
@@ -54,3 +54,7 @@ export default function StatsCard({
         </div>
     );
 }
+
+// React.memo to prevent unnecessary re-renders when data hasn't changed
+const StatsCard = React.memo(StatsCardComponent);
+export default StatsCard;

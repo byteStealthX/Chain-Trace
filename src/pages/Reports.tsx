@@ -17,6 +17,7 @@ export default function Reports() {
     const [payload, setPayload] = useState<ExportPayload | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [durationMs, setDurationMs] = useState(0);
     const [copied, setCopied] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -25,13 +26,17 @@ export default function Reports() {
     const generateReport = useCallback(async () => {
         setLoading(true);
         setError('');
+        setValidationErrors([]);
         setCopied(false);
 
-        const { data, error: err, durationMs: ms } = await buildExportPayload();
+        const { data, error: err, durationMs: ms, validationErrors: vErrs } = await buildExportPayload();
         setDurationMs(ms);
 
         if (err || !data) {
             setError(err ?? 'Failed to generate report');
+            if (vErrs && vErrs.length > 0) {
+                setValidationErrors(vErrs);
+            }
             setLoading(false);
             return;
         }
@@ -42,7 +47,7 @@ export default function Reports() {
 
     // ── Download ────────────────────────────────────────────────────────
     const handleDownload = () => {
-        if (payload) downloadJson(payload);
+        if (payload && validationErrors.length === 0) downloadJson(payload);
     };
 
     // ── Copy to clipboard ──────────────────────────────────────────────
@@ -146,11 +151,25 @@ export default function Reports() {
                 </div>
             </div>
 
-            {/* Error */}
-            {error && (
-                <div className="flex items-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-sm">
-                    <HiOutlineExclamationCircle className="h-5 w-5 text-rose-400 flex-shrink-0" />
-                    <span className="text-rose-300">{error}</span>
+            {/* Error & Validation */}
+            {(error || validationErrors.length > 0) && (
+                <div className="flex flex-col gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-sm">
+                    {error && (
+                        <div className="flex items-center gap-3">
+                            <HiOutlineExclamationCircle className="h-5 w-5 text-rose-400 flex-shrink-0" />
+                            <span className="text-rose-300">{error}</span>
+                        </div>
+                    )}
+                    {validationErrors.length > 0 && (
+                        <div className="space-y-2 mt-1">
+                            <p className="font-semibold text-rose-400">Specification Mismatches:</p>
+                            <ul className="list-disc list-inside text-rose-300/80 space-y-1">
+                                {validationErrors.map((err, i) => (
+                                    <li key={i}>{err}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             )}
 
