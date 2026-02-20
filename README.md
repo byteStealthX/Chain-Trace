@@ -89,6 +89,29 @@ This project is configured for easy deployment on **Render.com**.
     - `VITE_SUPABASE_ANON_KEY`
     - `VITE_API_BASE_URL` (Set to your deployed Backend URL, e.g., `https://chain-trace-backend.onrender.com`)
 
+### ⚠️ Manual Configuration (Crucial for Deployment Success)
+
+If you are **not** using the "Blueprint" feature (i.e. you created services manually):
+
+1.  **Backend Service**:
+    - Go to **Settings > Build & Deploy**.
+    - Set **Root Directory** to `backend`. (Default is empty/root, which will fail!)
+    - Set **Build Command** to `npm install`.
+    - Set **Start Command** to `npm start`.
+
+2.  **Frontend Service**:
+    - Go to **Settings > Build & Deploy**.
+    - Set **Root Directory** to `frontend`.
+    - Set **Build Command** to `npm install && npm run build`.
+    - Set **Publish Directory** to `dist`.
+
+3.  **Cron Job (Optional)**:
+    - Create a new **Cron Job**.
+    - Set **Root Directory** to `backend`.
+    - Set **Command** to `node cron/dailyScan.js`.
+    - Schedule: `0 0 * * *`.
+
+
 ## 🛡️ API Reference
 
 ### `POST /api/upload`
