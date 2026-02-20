@@ -370,6 +370,18 @@ async function runAnalysis(transactions) {
         }));
         const { error: rError } = await supabase.from('fraud_rings').insert(ringRecords);
         if (rError) console.error("Fraud ring insert error:", rError);
+        if (rError) console.error("Fraud ring insert error:", rError);
+
+        // Update transactions to is_flagged = true
+        const allFlaggedTxIds = new Set(allRings.flatMap(r => r.transactions));
+        if (allFlaggedTxIds.size > 0) {
+            const { error: fError } = await supabase
+                .from('transactions')
+                .update({ is_flagged: true, risk_score: 99 }) // Mark as high risk
+                .in('id', Array.from(allFlaggedTxIds));
+
+            if (fError) console.error("Error flagging transactions:", fError);
+        }
     }
 
     // 7. Scores
