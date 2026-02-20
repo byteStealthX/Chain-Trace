@@ -1,73 +1,89 @@
-# Welcome to your Lovable project
 
-## Project info
+# Chain-Trace: AI-Powered Financial Crime Detection
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Chain-Trace is a cutting-edge platform designed to detect and visualize complex financial fraud patterns using Graph Algorithms and Supabase Edge Functions.
 
-## How can I edit this code?
+## 🚀 Key Features
 
-There are several ways of editing your application.
+### 1. **Real-Time Dashboard**
+- **Live Statistics**: Monitor total transaction volume, flagged accounts, and recent activity.
+- **CSV Data Ingestion**: Drag-and-drop interface to upload bulk transaction logs directly to the database.
+- **Dark Mode**: Fully immersive cinematic dark theme with light/system toggle.
 
-**Use Lovable**
+### 2. **AI Fraud Engine**
+- **Powered by Supabase Edge Functions**: Runs complex graph algorithms on-demand.
+- **Advanced Detection Logic**:
+    - **Circular Routing**: Detects money loops (length 3-5) indicative of money laundering.
+    - **Smurfing**: Identifies fan-in (many-to-one) and fan-out (one-to-many) patterns within 72h windows.
+    - **Shell Networks**: Flags layered chains of low-activity accounts used to obscure funds.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 3. **Interactive Graph & Analytics**
+- **Graph Engine**: Visualizes accounts as nodes and transactions as edges to reveal hidden relationships.
+- **Fraud Summary**: Detailed reports on detected fraud rings and suspicious accounts, ranked by risk score.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Recharts
+- **Backend & Database**: Supabase (PostgreSQL)
+- **Compute**: Supabase Edge Functions (Deno/TypeScript)
+- **Deployment**: Render (Static Site)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📦 Project Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+- Node.js (v18+)
+- Supabase CLI (optional, for local dev)
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-repo/chain-trace.git
+    cd chain-trace
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Set up Environment Variables:**
+    Create a `.env` file in the root directory:
+    ```env
+    VITE_SUPABASE_URL=your_supabase_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+4.  **Run Development Server:**
+    ```bash
+    npm run dev
+    ```
+
+### Deployment
+
+**Frontend (Render/Vercel/Netlify):**
+Build the project for production:
+```bash
+npm run build
+```
+The output will be in the `dist` folder.
+
+**Edge Functions (Supabase):**
+Deploy the fraud detection engine:
+```bash
+supabase functions deploy analyze-transactions
 ```
 
-**Edit a file directly in GitHub**
+## 🛡️ Database Schema
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **accounts**: Stores node details (ID, risk level, aggregate stats).
+- **transactions**: Edges representing money flow.
+- **fraud_rings**: Detected patterns (Circular, Smurfing, Shells).
+- **suspicious_accounts**: Calculated risk scores and labels.
 
-**Use GitHub Codespaces**
+## 🤝 Contribution
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Contributions are welcome! Please fork the repository and submit a pull request.
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Built with ❤️ for RIFT 2026 Hackathon.*
