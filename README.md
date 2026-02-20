@@ -1,89 +1,100 @@
-
 # Chain-Trace: AI-Powered Financial Crime Detection
 
-Chain-Trace is a cutting-edge platform designed to detect and visualize complex financial fraud patterns using Graph Algorithms and Supabase Edge Functions.
+Chain-Trace is a production-ready platform designed to detect and visualize complex financial fraud patterns using Graph Algorithms and a dedicated Node.js backend.
+
+## 🏗️ Architecture
+
+This project is split into two separate services for scalable deployment:
+
+- **`/frontend`**: React (Vite) Single Page Application. Handles UI, visualization, and user interaction.
+- **`/backend`**: Node.js (Express) API. Handles CSV parsing, fraud detection logic, and database operations.
 
 ## 🚀 Key Features
 
-### 1. **Real-Time Dashboard**
-- **Live Statistics**: Monitor total transaction volume, flagged accounts, and recent activity.
-- **CSV Data Ingestion**: Drag-and-drop interface to upload bulk transaction logs directly to the database.
-- **Dark Mode**: Fully immersive cinematic dark theme with light/system toggle.
+- **Real-Time Dashboard**: Monitor transaction volume, flagged accounts, and recent activity.
+- **AI Fraud Engine**:
+    - **Circular Routing**: Detects money loops (length 3-5).
+    - **Smurfing**: Identifies fan-in/fan-out patterns (72h window).
+    - **Shell Networks**: Flags layered chains of low-activity accounts.
+- **Interactive Graph**: Visualizes accounts (nodes) and transactions (edges).
+- **Backend API**: Robust CSV processing and fraud analysis endpoint.
 
-### 2. **AI Fraud Engine**
-- **Powered by Supabase Edge Functions**: Runs complex graph algorithms on-demand.
-- **Advanced Detection Logic**:
-    - **Circular Routing**: Detects money loops (length 3-5) indicative of money laundering.
-    - **Smurfing**: Identifies fan-in (many-to-one) and fan-out (one-to-many) patterns within 72h windows.
-    - **Shell Networks**: Flags layered chains of low-activity accounts used to obscure funds.
+## 🛠️ Local Setup
 
-### 3. **Interactive Graph & Analytics**
-- **Graph Engine**: Visualizes accounts as nodes and transactions as edges to reveal hidden relationships.
-- **Fraud Summary**: Detailed reports on detected fraud rings and suspicious accounts, ranked by risk score.
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React (Vite), Tailwind CSS, Framer Motion, Recharts
-- **Backend & Database**: Supabase (PostgreSQL)
-- **Compute**: Supabase Edge Functions (Deno/TypeScript)
-- **Deployment**: Render (Static Site)
-
-## 📦 Project Setup
-
-### Prerequisites
+### 1. Prerequisites
 - Node.js (v18+)
-- Supabase CLI (optional, for local dev)
+- Supabase Project (URL & Keys)
 
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-repo/chain-trace.git
-    cd chain-trace
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Set up Environment Variables:**
-    Create a `.env` file in the root directory:
-    ```env
-    VITE_SUPABASE_URL=your_supabase_url
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-    ```
-
-4.  **Run Development Server:**
-    ```bash
-    npm run dev
-    ```
-
-### Deployment
-
-**Frontend (Render/Vercel/Netlify):**
-Build the project for production:
+### 2. Backend Setup
+Navigate to the backend directory:
 ```bash
-npm run build
-```
-The output will be in the `dist` folder.
-
-**Edge Functions (Supabase):**
-Deploy the fraud detection engine:
-```bash
-supabase functions deploy analyze-transactions
+cd backend
+npm install
 ```
 
-## 🛡️ Database Schema
+Create `backend/.env` file:
+```env
+PORT=10000
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
 
-- **accounts**: Stores node details (ID, risk level, aggregate stats).
-- **transactions**: Edges representing money flow.
-- **fraud_rings**: Detected patterns (Circular, Smurfing, Shells).
-- **suspicious_accounts**: Calculated risk scores and labels.
+Start the server:
+```bash
+npm start
+```
+The server will run on `http://localhost:10000`.
 
-## 🤝 Contribution
+### 3. Frontend Setup
+Navigate to the frontend directory:
+```bash
+cd frontend
+npm install
+```
 
-Contributions are welcome! Please fork the repository and submit a pull request.
+Create `frontend/.env` file:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_API_BASE_URL=http://localhost:10000
+```
+
+Start the development server:
+```bash
+npm run dev
+```
+Open `http://localhost:8080` (or the port shown) in your browser.
+
+## ☁️ Deployment on Render
+
+This project is configured for easy deployment on **Render.com**.
+
+### 1. Backend Service (Web Service)
+- **Name**: `chain-trace-backend`
+- **Root Directory**: `backend`
+- **Environment**: Node
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+    - `SUPABASE_URL`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+
+### 2. Frontend Service (Static Site)
+- **Name**: `chain-trace-frontend`
+- **Root Directory**: `frontend`
+- **Build Command**: `npm install && npm run build`
+- **Publish Directory**: `dist`
+- **Environment Variables**:
+    - `VITE_SUPABASE_URL`
+    - `VITE_SUPABASE_ANON_KEY`
+    - `VITE_API_BASE_URL` (Set to your deployed Backend URL, e.g., `https://chain-trace-backend.onrender.com`)
+
+## 🛡️ API Reference
+
+### `POST /api/upload`
+Uploads a CSV file of transactions for analysis.
+- **Body**: `multipart/form-data` with key `file`.
+- **Response**: JSON object containing detected fraud rings, suspicious accounts, and graph data.
 
 ---
-*Built with ❤️ for RIFT 2026 Hackathon.*
+*Built for RIFT 2026 Hackathon.*

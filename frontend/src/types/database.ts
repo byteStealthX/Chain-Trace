@@ -17,6 +17,8 @@ export interface Transaction {
     transaction_ref: string | null;
     sender_id: string;
     receiver_id: string;
+    receiver_name?: string; // Optional for frontend convenience
+    sender_name?: string;   // Optional for frontend convenience
     amount: number;
     currency: string;
     timestamp: string;
@@ -30,26 +32,30 @@ export interface Transaction {
 }
 
 export interface FraudAlert {
-    id: string; // UUID
-    transaction_id?: string; // UUID
+    id: string;
+    transaction_id?: string;
     alert_type: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     message: string;
-    details?: any; // JSONB
+    details?: any;
     is_resolved: boolean;
-    resolved_at?: string; // ISO timestamp
+    resolved_at?: string;
     resolved_by?: string;
-    created_at: string; // ISO timestamp
+    created_at: string;
 }
 
 export interface Report {
-    id: string; // UUID
-    generated_at: string; // ISO timestamp
+    id: string;
+    created_at: string; // Changed from generated_at to match typical Supabase
     title: string;
-    summary: string;
+    report_type: 'summary' | 'detailed' | 'network_analysis' | 'risk_assessment';
+    date_range_start: string | null;
+    date_range_end: string | null;
+    total_transactions: number;
     total_flagged: number;
+    total_accounts: number;
     avg_risk_score: number;
-    details?: any; // JSONB
+    findings?: any;
 }
 
 export interface FraudRing {
@@ -59,18 +65,31 @@ export interface FraudRing {
     accounts: string[];
     transactions: string[];
     total_amount: number;
+    cycle_length?: number;
+    hop_count?: number;
+    window_hours?: number;
     description: string;
-    created_at: string;
     details?: any;
+    detected_at: string;  // Explicit column
+    created_at: string;   // Generated alias
+    is_resolved?: boolean;
+    resolved_at?: string;
 }
 
 export interface SuspiciousAccount {
     id: string;
     account_id: string;
     suspicion_score: number;
+    raw_score: number;
+    cycle_score: number;
+    fanin_fanout_score: number;
+    shell_score: number;
+    velocity_score: number;
     risk_label: 'clean' | 'low' | 'moderate' | 'high' | 'critical';
+    contributing_rings: string[];
     transaction_count: number;
     total_volume: number;
-    created_at: string;
+    scored_at: string;    // Explicit column
+    created_at: string;   // Generated alias
     analysis_id?: string;
 }

@@ -2,10 +2,157 @@
 import { Link } from "react-router-dom";
 import { ModeToggle } from "../components/mode-toggle";
 import { useDashboardStats } from "../hooks/useData";
-import { useRef, useState } from "react";
-import Papa from "papaparse";
+import { useRef, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+
+// ── Mini Transaction Network Graph ──────────────────────────────────────────
+interface MiniGraphProps {
+    transactions: Array<{
+        id: string;
+        sender_id: string;
+        receiver_id: string;
+        amount: number;
+        is_flagged: boolean;
+        sender?: { account_name?: string | null };
+        receiver?: { account_name?: string | null };
+    }>;
+    loading: boolean;
+}
+
+function MiniGraph({ transactions, loading }: MiniGraphProps) {
+    const [hovered, setHovered] = useState<string | null>(null);
+
+    const { nodes, edges } = useMemo(() => {
+        if (!transactions.length) return { nodes: [], edges: [] };
+
+        // Collect unique accounts
+        const accountMap = new Map<string, string>(); // id -> display label
+        transactions.forEach(tx => {
+            if (!accountMap.has(tx.sender_id))
+                accountMap.set(tx.sender_id, tx.sender?.account_name || tx.sender_id.slice(0, 6));
+            if (!accountMap.has(tx.receiver_id))
+                accountMap.set(tx.receiver_id, tx.receiver?.account_name || tx.receiver_id.slice(0, 6));
+        });
+
+        const accountIds = Array.from(accountMap.keys());
+        const W = 800, H = 320, CX = W / 2, CY = H / 2;
+
+        // Layout on an ellipse
+        const nodes = accountIds.map((id, i) => {
+            const angle = (2 * Math.PI * i) / accountIds.length - Math.PI / 2;
+            const rx = Math.min(CX * 0.7, 300);
+            const ry = Math.min(CY * 0.7, 120);
+            return {
+                id,
+                label: accountMap.get(id)!,
+                x: CX + rx * Math.cos(angle),
+                y: CY + ry * Math.sin(angle),
+                flagged: transactions.some(t => (t.sender_id === id || t.receiver_id === id) && t.is_flagged),
+            };
+        });
+
+        const nodeIndex = new Map(nodes.map(n => [n.id, n]));
+
+        const edges = transactions.map(tx => ({
+            id: tx.id,
+            x1: nodeIndex.get(tx.sender_id)?.x ?? CX,
+            y1: nodeIndex.get(tx.sender_id)?.y ?? CY,
+            x2: nodeIndex.get(tx.receiver_id)?.x ?? CX,
+            y2: nodeIndex.get(tx.receiver_id)?.y ?? CY,
+            flagged: tx.is_flagged,
+            amount: tx.amount,
+        }));
+
+        return { nodes, edges };
+    }, [transactions]);
+
+    return (
+        <div className="glass rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-sm font-bold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-accent-purple text-lg">hub</span>
+                    Live Transaction Network
+                </h2>
+                <Link to="/analytics" className="text-xs text-primary hover:underline">View Full Analytics →</Link>
+            </div>
+            <div className="relative w-full" style={{ minHeight: 340 }}>
+                {loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">Loading graph...</div>
+                ) : transactions.length === 0 ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-3">
+                        <span className="material-symbols-outlined text-4xl opacity-30">account_tree</span>
+                        <p className="text-sm">Upload a CSV and run Analyze to see the network graph.</p>
+                    </div>
+                ) : (
+                    <svg className="w-full" viewBox="0 0 800 340" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <marker id="arrowClean" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                <path d="M0,0 L0,6 L6,3 z" fill="#06dcf9" opacity="0.6" />
+                            </marker>
+                            <marker id="arrowFlagged" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                <path d="M0,0 L0,6 L6,3 z" fill="#ef4444" opacity="0.8" />
+                            </marker>
+                        </defs>
+
+                        {/* Edges */}
+                        {edges.map(e => (
+                            <line
+                                key={e.id}
+                                x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
+                                stroke={e.flagged ? '#ef4444' : '#06dcf9'}
+                                strokeWidth={e.flagged ? 1.5 : 1}
+                                strokeOpacity={e.flagged ? 0.7 : 0.4}
+                                markerEnd={e.flagged ? 'url(#arrowFlagged)' : 'url(#arrowClean)'}
+                                strokeDasharray={e.flagged ? '4 2' : undefined}
+                            >
+                                <title>${e.amount.toFixed(2)} {e.flagged ? '⚠ Flagged' : '✓ Clean'}</title>
+                            </line>
+                        ))}
+
+                        {/* Nodes */}
+                        {nodes.map(n => (
+                            <g key={n.id}
+                                onMouseEnter={() => setHovered(n.id)}
+                                onMouseLeave={() => setHovered(null)}
+                                style={{ cursor: 'pointer' }}>
+                                {/* Glow ring on hover */}
+                                {hovered === n.id && (
+                                    <circle cx={n.x} cy={n.y} r={18}
+                                        fill="none"
+                                        stroke={n.flagged ? '#ef4444' : '#06dcf9'}
+                                        strokeWidth={1.5}
+                                        strokeOpacity={0.5} />
+                                )}
+                                <circle
+                                    cx={n.x} cy={n.y} r={10}
+                                    fill={n.flagged ? '#ef4444' : '#06dcf9'}
+                                    fillOpacity={n.flagged ? 0.85 : 0.7}
+                                />
+                                <text
+                                    x={n.x} y={n.y + 22}
+                                    textAnchor="middle"
+                                    fill="#94a3b8"
+                                    fontSize="9"
+                                    fontFamily="monospace">
+                                    {n.label.length > 10 ? n.label.slice(0, 9) + '…' : n.label}
+                                </text>
+                            </g>
+                        ))}
+                    </svg>
+                )}
+            </div>
+            {/* Legend */}
+            {!loading && transactions.length > 0 && (
+                <div className="px-4 pb-4 flex items-center gap-6 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary/70 inline-block"></span>Clean transfer</span>
+                    <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-500/80 inline-block"></span>Flagged transfer</span>
+                    <span className="text-slate-600">Showing recent {transactions.length} transactions</span>
+                </div>
+            )}
+        </div>
+    );
+}
 
 const Dashboard = () => {
     const { stats, loading } = useDashboardStats();
@@ -13,91 +160,51 @@ const Dashboard = () => {
     const [uploading, setUploading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         setUploading(true);
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: async (results) => {
-                try {
-                    const rows = results.data as any[];
-                    console.log("Parsed CSV:", rows);
+        toast.info("Uploading and analyzing transactions...");
 
-                    // 1. Extract unique accounts
-                    const accounts = new Set<string>();
-                    rows.forEach(row => {
-                        if (row.sender_id) accounts.add(row.sender_id);
-                        if (row.receiver_id) accounts.add(row.receiver_id);
-                    });
+        const formData = new FormData();
+        formData.append('file', file);
 
-                    // 2. Upsert accounts
-                    const accountUpdates = Array.from(accounts).map(id => ({
-                        account_id: id,
-                        account_name: `Account ${id}`,
-                        risk_level: 'low' // Default
-                    }));
-
-                    if (accountUpdates.length > 0) {
-                        const { error: accError } = await supabase
-                            .from('accounts')
-                            .upsert(accountUpdates, { onConflict: 'account_id', ignoreDuplicates: true });
-                        if (accError) throw accError;
-                    }
-
-                    // 3. Insert transactions
-                    const transactions = rows.map(row => ({
-                        transaction_ref: row.transaction_ref || crypto.randomUUID(),
-                        sender_id: row.sender_id,
-                        receiver_id: row.receiver_id,
-                        amount: parseFloat(row.amount),
-                        currency: row.currency || 'USD',
-                        timestamp: row.timestamp || new Date().toISOString(),
-                        risk_score: 0,
-                        is_flagged: false
-                    }));
-
-                    const { error: txError } = await supabase.from('transactions').insert(transactions);
-                    if (txError) throw txError;
-
-                    toast.success(`Successfully uploaded ${transactions.length} transactions`);
-                    window.location.reload();
-
-                } catch (error: any) {
-                    console.error("Upload error:", error);
-                    toast.error("Upload failed: " + error.message);
-                } finally {
-                    setUploading(false);
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                }
-            },
-            error: (error) => {
-                toast.error("CSV Parse Error");
-                setUploading(false);
-            }
-        });
-    };
-
-    const handleAnalyze = async () => {
-        setAnalyzing(true);
-        toast.info("Starting AI analysis...");
         try {
-            const { data, error } = await supabase.functions.invoke('analyze-transactions');
-            if (error) throw error;
+            const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
+            const response = await fetch(`${apiUrl}/api/upload`, {
+                method: 'POST',
+                body: formData,
+            });
 
-            toast.success(`Analysis Complete: ${data.fraud_ring_count || 0} rings detected.`);
-            // Refresh stats after a short delay to allow DB to update
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
+            }
+
+            const result = await response.json();
+            console.log("Analysis Result:", result);
+
+            toast.success(`Analysis Complete: ${result.fraud_ring_count || 0} rings detected.`);
+
+            // Reload to fetch updated stats from DB
             setTimeout(() => {
                 window.location.reload();
-            }, 1000);
-        } catch (err: any) {
-            console.error("Analysis failed:", err);
-            toast.error("Analysis failed: " + err.message);
+            }, 1500);
+
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            console.error("Upload/Analysis error:", error);
+            toast.error("Process failed: " + message);
         } finally {
-            setAnalyzing(false);
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
+    };
+
+    // Removed separate handleAnalyze as upload now triggers analysis
+    const handleAnalyze = () => {
+        toast.info("Please upload a CSV file to trigger analysis.");
     };
 
     return (
@@ -321,11 +428,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-                {/* Graph removed from Dashboard to keep it clean, available in Analysis/Graph page? Or keep as SVG placeholder? Keeping placeholder for now as it's just a demo */}
-                <div className="glass rounded-xl overflow-hidden min-h-[500px] flex flex-col items-center justify-center p-10">
-                    <p className="text-slate-500">Graph visualization moved to dedicated Engine page</p>
-                    <Link to="/analytics" className="mt-4 px-6 py-2 bg-primary text-background-dark font-bold rounded-lg hover:bg-primary/90">Go to Graph Engine</Link>
-                </div>
+                {/* Live Transaction Network Graph */}
+                <MiniGraph transactions={stats.recentTransactions} loading={loading} />
             </main>
         </div>
     );

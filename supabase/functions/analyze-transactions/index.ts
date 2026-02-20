@@ -53,6 +53,7 @@ interface GraphEdge {
 }
 
 interface FraudRing {
+    id: string;
     ring_type: string;
     severity: string;
     accounts: string[];
@@ -186,6 +187,7 @@ function detectCircularRouting(
                         const severity = cycleLength >= 4 ? 'critical' : 'high';
 
                         rings.push({
+                            id: crypto.randomUUID(), // Generate UUID
                             ring_type: 'circular_routing',
                             severity,
                             accounts: path,
@@ -256,6 +258,7 @@ function detectSmurfing(transactions: Transaction[]): FraudRing[] {
             if (senders.size >= MIN_COUNTERPARTIES) {
                 const windowHours = Math.round(((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10) / 10;
                 rings.push({
+                    id: crypto.randomUUID(),
                     ring_type: 'smurfing_fan_in',
                     severity: totalAmount > 10000 ? 'critical' : totalAmount > 5000 ? 'high' : 'medium',
                     accounts: [receiver, ...Array.from(senders)],
@@ -297,6 +300,7 @@ function detectSmurfing(transactions: Transaction[]): FraudRing[] {
             if (receivers.size >= MIN_COUNTERPARTIES) {
                 const windowHours = Math.round(((new Date(windowTxs[windowTxs.length - 1].timestamp).getTime() - windowStart) / 3600000) * 10) / 10;
                 rings.push({
+                    id: crypto.randomUUID(),
                     ring_type: 'smurfing_fan_out',
                     severity: totalAmount > 10000 ? 'critical' : totalAmount > 5000 ? 'high' : 'medium',
                     accounts: [sender, ...Array.from(receivers)],
@@ -372,6 +376,7 @@ function detectShellNetworks(
                             const severity = hopCount >= 5 ? 'critical' : hopCount >= 4 ? 'high' : 'medium';
 
                             rings.push({
+                                id: crypto.randomUUID(),
                                 ring_type: 'layered_shell_network',
                                 severity,
                                 accounts: [...newPath], // unsorted for display
@@ -443,7 +448,7 @@ function computeSuspicionScores(
 
     // ── Credit from fraud ring participation ────────────────────────
     for (const ring of fraudRings) {
-        const ringId = `${ring.ring_type}_${ring.accounts.sort().join('_')}`;
+        const ringId = ring.id; // Use real UUID
 
         for (const accountId of ring.accounts) {
             const s = getScore(accountId);
@@ -641,6 +646,7 @@ serve(async (req: Request) => {
         // ── Store fraud rings in database ───────────────────────────────
         if (allRings.length > 0) {
             const records = allRings.map((r) => ({
+                id: r.id, // Explicit ID
                 ring_type: r.ring_type,
                 severity: r.severity,
                 accounts: r.accounts,
@@ -679,6 +685,7 @@ serve(async (req: Request) => {
                 shell_score: sa.shell_score,
                 velocity_score: sa.velocity_score,
                 risk_label: sa.risk_label,
+                contributing_rings: sa.contributing_rings, // Insert UUID[] from Set
                 transaction_count: sa.transaction_count,
                 total_volume: sa.total_volume,
                 analysis_id: analysisId,

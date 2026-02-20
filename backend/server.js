@@ -23,18 +23,18 @@ try {
 }
 
 // Health check endpoints (before wildcard route)
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 console.log('Wildcard route setup...');
 // Wildcard route to serve index.html for client-side routing
 try {
-    app.get('/*', (req, res) => {
+    app.get('/*', (_req, res) => {
         const indexPath = path.join(__dirname, 'dist', 'index.html');
         console.log('Sending index.html from:', indexPath);
         res.sendFile(indexPath);
