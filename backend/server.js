@@ -25,7 +25,9 @@ app.use((_req, res, next) => {
 
 // Serve static files from the dist directory
 try {
-    const distPath = path.join(__dirname, 'dist');
+    // Try serving from root dist (../dist) first, as that's where root build puts it
+    let distPath = path.join(__dirname, '../dist');
+    // Fallback or check if it exists? Express.static won't error if empty, but let's be explicit
     console.log('Serving static files from:', distPath);
     app.use(express.static(distPath));
 } catch (error) {
@@ -41,11 +43,10 @@ app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-console.log('Wildcard route setup...');
 // Wildcard route to serve index.html for client-side routing
 try {
     app.get('/*', (_req, res) => {
-        const indexPath = path.join(__dirname, 'dist', 'index.html');
+        const indexPath = path.join(__dirname, '../dist', 'index.html');
         console.log('Sending index.html from:', indexPath);
         res.sendFile(indexPath);
     });
