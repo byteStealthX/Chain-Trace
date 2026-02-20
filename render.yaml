@@ -31,3 +31,17 @@ services:
           type: web
           name: chain-trace-backend
           property: url
+
+  # Cron Job (Daily Fraud Scan)
+  - type: cron
+    name: daily-fraud-scan
+    env: node
+    rootDir: backend
+    schedule: "0 0 * * *" # Runs daily at midnight
+    buildCommand: npm install
+    startCommand: node cron/dailyScan.js
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
