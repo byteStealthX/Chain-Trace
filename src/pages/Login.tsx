@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -53,7 +54,7 @@ const Login = () => {
     };
 
     return (
-        <div className="bg-background-dark min-h-screen flex overflow-hidden font-display">
+        <div className="bg-background-light dark:bg-background-dark min-h-screen flex overflow-hidden font-display transition-colors duration-300">
             {/* Left Section - Branding & Art */}
             <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-slate-900">
                 <div className="absolute inset-0 network-bg opacity-30"></div>
@@ -101,26 +102,28 @@ const Login = () => {
             </div>
 
             {/* Right Section - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background-dark relative">
-                <div className="absolute top-0 right-0 p-8">
-                    <p className="text-sm text-slate-400">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background-light dark:bg-background-dark relative transition-colors duration-300">
+                <div className="absolute top-0 right-0 p-8 flex items-center gap-4">
+                    <ModeToggle />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                         Don't have an account? <a href="#" className="font-semibold text-primary hover:text-primary/80 transition-colors">Contact Sales</a>
                     </p>
                 </div>
 
                 <div className="max-w-md w-full">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-                        <p className="text-slate-400">Sign in to access your dashboard</p>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome Back</h2>
+                        <p className="text-slate-500 dark:text-slate-400">Sign in to access your dashboard</p>
                     </div>
 
                     <form className="space-y-6" onSubmit={handleLogin}>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="email">Work Email</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="email">Work Email</label>
                             <div className="relative group glow-on-focus rounded-lg transition-all">
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">mail</span>
                                 <input
-                                    className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-lg pl-10 pr-4 py-3 placeholder:text-slate-600 focus:outline-none focus:bg-slate-800 transition-colors"
+                                    <input
+                                    className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg pl-10 pr-4 py-3 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-800 transition-colors"
                                     id="email"
                                     placeholder="name@company.com"
                                     type="email"
@@ -133,13 +136,14 @@ const Login = () => {
 
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <label className="block text-sm font-medium text-slate-300" htmlFor="password">Password</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">Password</label>
                                 <a href="#" className="text-sm text-primary hover:text-primary/80 font-medium">Forgot password?</a>
                             </div>
                             <div className="relative group glow-on-focus rounded-lg transition-all">
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">lock</span>
                                 <input
-                                    className="w-full bg-slate-800/50 border border-slate-700 text-white rounded-lg pl-10 pr-12 py-3 placeholder:text-slate-600 focus:outline-none focus:bg-slate-800 transition-colors"
+                                    <input
+                                    className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg pl-10 pr-12 py-3 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-800 transition-colors"
                                     id="password"
                                     placeholder="••••••••"
                                     type="password"

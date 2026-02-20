@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { useFraudSummary } from "../hooks/useData";
+import { ModeToggle } from "../components/mode-toggle";
 
 const FraudSummary = () => {
     const { alerts, reports, loading } = useFraudSummary();
@@ -60,6 +61,7 @@ const FraudSummary = () => {
                             <span className="material-symbols-outlined text-lg">download</span>
                             Download JSON
                         </button>
+                        <ModeToggle />
                     </div>
                 </header>
 

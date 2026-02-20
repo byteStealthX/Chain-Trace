@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { ModeToggle } from "../components/mode-toggle";
 
 const Dashboard = () => {
     return (
@@ -21,6 +22,7 @@ const Dashboard = () => {
                         <Link className="text-slate-400 hover:text-white transition-colors text-sm font-medium" to="/settings">Settings</Link>
                     </nav>
                     <div className="flex items-center gap-4">
+                        <ModeToggle />
                         <button className="p-2 text-slate-400 hover:text-white relative">
                             <span className="material-symbols-outlined">notifications</span>
                             <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-background-dark"></span>

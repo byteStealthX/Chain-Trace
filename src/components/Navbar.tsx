@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { ModeToggle } from "./mode-toggle";
 
 const links = ["Home", "Features", "Graph Engine", "Dashboard", "Contact"];
 
@@ -29,14 +30,15 @@ const Navbar = () => {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-8">
           {links.map((l) =>
-          <button
-            key={l}
-            onClick={() => scrollTo(l)}
-            className="text-sm text-muted-foreground transition-colors duration-300 hover:text-primary">
+            <button
+              key={l}
+              onClick={() => scrollTo(l)}
+              className="text-sm text-muted-foreground transition-colors duration-300 hover:text-primary">
 
               {l}
             </button>
           )}
+          <ModeToggle />
         </div>
 
         {/* Mobile toggle */}
@@ -48,24 +50,24 @@ const Navbar = () => {
       {/* Mobile overlay */}
       <AnimatePresence>
         {open &&
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 top-16 bg-background/95 backdrop-blur-lg flex flex-col items-center justify-center gap-8 md:hidden">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 top-16 bg-background/95 backdrop-blur-lg flex flex-col items-center justify-center gap-8 md:hidden">
 
             {links.map((l, i) =>
-          <motion.button
-            key={l}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07 }}
-            onClick={() => scrollTo(l)}
-            className="text-2xl font-medium text-foreground hover:text-primary transition-colors">
+              <motion.button
+                key={l}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                onClick={() => scrollTo(l)}
+                className="text-2xl font-medium text-foreground hover:text-primary transition-colors">
 
                 {l}
               </motion.button>
-          )}
+            )}
           </motion.div>
         }
       </AnimatePresence>

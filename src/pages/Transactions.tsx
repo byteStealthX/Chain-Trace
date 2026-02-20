@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTransactions } from "../hooks/useData";
+import { ModeToggle } from "../components/mode-toggle";
 
 const Transactions = () => {
     const { transactions, loading, error } = useTransactions();
@@ -95,6 +96,7 @@ const Transactions = () => {
                                 <span className="material-symbols-outlined text-xl">calendar_today</span>
                                 <span>Recent</span>
                             </button>
+                            <ModeToggle />
                         </div>
                     </div>
                     {/* Stats Mini Cards - Calculated from fetched data if possible, else static for now or computed */}
