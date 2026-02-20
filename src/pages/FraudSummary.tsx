@@ -1,7 +1,16 @@
 
 import { Link } from "react-router-dom";
+import { useFraudSummary } from "../hooks/useData";
 
 const FraudSummary = () => {
+    const { alerts, reports, loading } = useFraudSummary();
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-background-dark text-slate-100">Loading summary...</div>;
+
+    // Use latest report for stats if available, otherwise calc from alerts
+    const totalFlagged = reports[0]?.details?.total_flagged || alerts.length;
+    const avgRisk = reports[0]?.details?.avg_risk_score || 0;
+
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
             {/* Left Sidebar (Narrow Icon Navigation) */}
@@ -42,18 +51,14 @@ const FraudSummary = () => {
                     <div className="flex flex-col gap-1">
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Fraud Detection Results</h1>
                         <p className="text-slate-500 dark:text-slate-400 text-sm">
-                            Last scan: <span className="text-slate-700 dark:text-slate-300 font-medium">Feb 19, 2026 at 3:15 PM</span> —
-                            <span className="text-red-500 font-semibold ml-1">23 flagged accounts</span>
+                            Last scan: <span className="text-slate-700 dark:text-slate-300 font-medium">Just now</span> —
+                            <span className="text-red-500 font-semibold ml-1">{totalFlagged} flagged items</span>
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button className="px-5 py-2.5 rounded-lg border border-primary/40 text-primary hover:bg-primary/10 font-medium transition-all text-sm flex items-center gap-2">
                             <span className="material-symbols-outlined text-lg">download</span>
                             Download JSON
-                        </button>
-                        <button className="px-5 py-2.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-700 font-medium transition-all text-sm flex items-center gap-2">
-                            <span className="material-symbols-outlined text-lg">csv</span>
-                            Export CSV
                         </button>
                     </div>
                 </header>
@@ -62,12 +67,9 @@ const FraudSummary = () => {
                 <section className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="glass p-6 rounded-xl flex items-center justify-between group cursor-default">
                         <div>
-                            <p className="text-slate-400 text-sm font-medium mb-1">Flagged Accounts</p>
+                            <p className="text-slate-400 text-sm font-medium mb-1">Flagged Alerts</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-100">23</span>
-                                <span className="text-red-500 text-sm font-semibold flex items-center">
-                                    <span className="material-symbols-outlined text-xs">trending_up</span> 12%
-                                </span>
+                                <span className="text-4xl font-bold text-slate-100">{totalFlagged}</span>
                             </div>
                         </div>
                         <div className="size-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
@@ -76,12 +78,9 @@ const FraudSummary = () => {
                     </div>
                     <div className="glass p-6 rounded-xl flex items-center justify-between group cursor-default">
                         <div>
-                            <p className="text-slate-400 text-sm font-medium mb-1">Suspicious Chains</p>
+                            <p className="text-slate-400 text-sm font-medium mb-1">Reports Generated</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-100">156</span>
-                                <span className="text-primary text-sm font-semibold flex items-center">
-                                    <span className="material-symbols-outlined text-xs">link</span> Active
-                                </span>
+                                <span className="text-4xl font-bold text-slate-100">{reports.length}</span>
                             </div>
                         </div>
                         <div className="size-12 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
@@ -92,17 +91,11 @@ const FraudSummary = () => {
                         <div>
                             <p className="text-slate-400 text-sm font-medium mb-1">Risk Score (Avg)</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-100">78.4</span>
+                                <span className="text-4xl font-bold text-slate-100">{avgRisk}</span>
                                 <span className="text-slate-500 text-sm">/ 100</span>
                             </div>
                         </div>
-                        <div className="relative size-14">
-                            <svg className="size-14 progress-ring">
-                                <circle className="text-slate-200 dark:text-slate-800" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" strokeWidth="4"></circle>
-                                <circle className="text-orange-500" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" strokeDasharray="150" strokeDashoffset="32" strokeLinecap="round" strokeWidth="4"></circle>
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-orange-500">78%</span>
-                        </div>
+                        {/* Circle progress could be dynamic but static for now */}
                     </div>
                 </section>
 
@@ -112,148 +105,44 @@ const FraudSummary = () => {
                         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/5">
                             <h2 className="font-semibold text-lg flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">list</span>
-                                High-Risk Entities
+                                Recent Alerts
                             </h2>
-                            <div className="relative">
-                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                                <input className="bg-background-light dark:bg-background-dark/50 border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary w-64 transition-all" placeholder="Search Account ID..." type="text" />
-                            </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                                        <th className="px-6 py-4">Rank</th>
-                                        <th className="px-6 py-4">Account ID</th>
-                                        <th className="px-6 py-4 text-center">Risk Score</th>
-                                        <th className="px-6 py-4">Connected</th>
-                                        <th className="px-6 py-4">Volume</th>
-                                        <th className="px-6 py-4">Reason</th>
-                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Type</th>
+                                        <th className="px-6 py-4">Message</th>
+                                        <th className="px-6 py-4">Severity</th>
+                                        <th className="px-6 py-4">Date</th>
                                         <th className="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                    {/* Sample Row 1 (Critical) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">01</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x71C...a4b</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-500 font-bold border border-red-500/30">94</span>
-                                        </td>
-                                        <td className="px-6 py-4">42</td>
-                                        <td className="px-6 py-4 font-medium">$124,500</td>
-                                        <td className="px-6 py-4 text-slate-400">High Velocity Transfers</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-500 animate-pulse"></span> Critical</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 2 (Critical) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">02</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x12A...f92</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-500 font-bold border border-red-500/30">91</span>
-                                        </td>
-                                        <td className="px-6 py-4">38</td>
-                                        <td className="px-6 py-4 font-medium">$98,200</td>
-                                        <td className="px-6 py-4 text-slate-400">Rapid Structuring</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-500"></span> Critical</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 3 (Warning) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">03</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x88B...c11</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">88</span>
-                                        </td>
-                                        <td className="px-6 py-4">25</td>
-                                        <td className="px-6 py-4 font-medium">$45,000</td>
-                                        <td className="px-6 py-4 text-slate-400">Layering Pattern</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 4 (Warning) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">04</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x45E...d33</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">82</span>
-                                        </td>
-                                        <td className="px-6 py-4">19</td>
-                                        <td className="px-6 py-4 font-medium">$32,100</td>
-                                        <td className="px-6 py-4 text-slate-400">New Account Activity</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 5 (Warning) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">05</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x99F...e22</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">76</span>
-                                        </td>
-                                        <td className="px-6 py-4">12</td>
-                                        <td className="px-6 py-4 font-medium">$15,400</td>
-                                        <td className="px-6 py-4 text-slate-400">Irregular Hours</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 6 (Elevated) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">06</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x22D...a88</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">72</span>
-                                        </td>
-                                        <td className="px-6 py-4">31</td>
-                                        <td className="px-6 py-4 font-medium">$67,000</td>
-                                        <td className="px-6 py-4 text-slate-400">Geographic Anomaly</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-yellow-500"></span> Warning</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 7 (Elevated) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">07</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x55C...b44</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">58</span>
-                                        </td>
-                                        <td className="px-6 py-4">8</td>
-                                        <td className="px-6 py-4 font-medium">$5,200</td>
-                                        <td className="px-6 py-4 text-slate-400">Small Round Sums</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-400"></span> Elevated</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
-                                    {/* Sample Row 8 (Elevated) */}
-                                    <tr className="glass-hover transition-all text-sm group">
-                                        <td className="px-6 py-4 font-medium text-slate-500">08</td>
-                                        <td className="px-6 py-4"><span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x33A...f00</span></td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">52</span>
-                                        </td>
-                                        <td className="px-6 py-4">5</td>
-                                        <td className="px-6 py-4 font-medium">$2,100</td>
-                                        <td className="px-6 py-4 text-slate-400">Frequent Transfers</td>
-                                        <td className="px-6 py-4"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-400"></span> Elevated</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
-                                        </td>
-                                    </tr>
+                                    {alerts.map((alert) => (
+                                        <tr key={alert.id} className="glass-hover transition-all text-sm group">
+                                            <td className="px-6 py-4 font-medium text-slate-500">{alert.alert_type}</td>
+                                            <td className="px-6 py-4">{alert.message}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${alert.severity === 'critical' ? 'bg-red-500/20 text-red-500' :
+                                                    alert.severity === 'high' ? 'bg-orange-500/20 text-orange-500' :
+                                                        'bg-yellow-500/20 text-yellow-500'
+                                                    }`}>
+                                                    {alert.severity.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-400">{new Date(alert.created_at).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <a className="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {alerts.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="p-8 text-center text-slate-500">No alerts found.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
