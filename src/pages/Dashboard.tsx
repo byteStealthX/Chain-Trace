@@ -11,6 +11,7 @@ const Dashboard = () => {
     const { stats, loading } = useDashboardStats();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -77,6 +78,26 @@ const Dashboard = () => {
                 setUploading(false);
             }
         });
+    };
+
+    const handleAnalyze = async () => {
+        setAnalyzing(true);
+        toast.info("Starting AI analysis...");
+        try {
+            const { data, error } = await supabase.functions.invoke('analyze-transactions');
+            if (error) throw error;
+
+            toast.success(`Analysis Complete: ${data.fraud_ring_count || 0} rings detected.`);
+            // Refresh stats after a short delay to allow DB to update
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (err: any) {
+            console.error("Analysis failed:", err);
+            toast.error("Analysis failed: " + err.message);
+        } finally {
+            setAnalyzing(false);
+        }
     };
 
     return (
@@ -175,8 +196,18 @@ const Dashboard = () => {
                                             <span className="size-2 bg-emerald-400 rounded-full"></span> Ready
                                         </span>
                                     </div>
-                                    <button className="w-full gradient-btn py-4 rounded-xl font-bold text-background-dark shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                        Analyze Transactions
+                                    <button
+                                        onClick={handleAnalyze}
+                                        disabled={analyzing}
+                                        className="w-full gradient-btn py-4 rounded-xl font-bold text-background-dark shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {analyzing ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                                <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                                                Analyzing...
+                                            </span>
+                                        ) : (
+                                            "Analyze Transactions"
+                                        )}
                                     </button>
                                 </div>
                                 <div className="space-y-4">
