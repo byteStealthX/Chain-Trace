@@ -122,7 +122,6 @@ const Login = () => {
                             <div className="relative group glow-on-focus rounded-lg transition-all">
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">mail</span>
                                 <input
-                                    <input
                                     className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg pl-10 pr-4 py-3 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-800 transition-colors"
                                     id="email"
                                     placeholder="name@company.com"
@@ -142,7 +141,6 @@ const Login = () => {
                             <div className="relative group glow-on-focus rounded-lg transition-all">
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">lock</span>
                                 <input
-                                    <input
                                     className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg pl-10 pr-12 py-3 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-800 transition-colors"
                                     id="password"
                                     placeholder="••••••••"
