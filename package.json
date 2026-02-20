@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "start": "node backend/server.js",
-        "build": "cd frontend && npm install && npm run build",
+        "build": "cd frontend && npm install && npm run build && cp -r dist ../dist",
         "dev": "cd frontend && npm run dev",
         "analyze": "node backend/cron/dailyScan.js"
     },
