@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphShield | Premium Sign-In</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#06dcf9",
+                        "secondary-purple": "#7C4DFF",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0F1117",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #06dcf9 0%, #7C4DFF 100%);
+        }
+        .glow-on-focus:focus-within {
+            box-shadow: 0 0 0 2px rgba(6, 220, 249, 0.2);
+            border-color: #06dcf9;
+        }
+        .network-bg {
+            background-image: radial-gradient(circle at 20% 30%, rgba(6, 220, 249, 0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 80% 70%, rgba(124, 77, 255, 0.15) 0%, transparent 40%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
+<div class="flex min-h-screen">
+<!-- Left Panel: Branding & Decorative Visualization -->
+<div class="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-background-dark network-bg border-r border-slate-800">
+<!-- Background Decoration (Abstract Network Nodes) -->
+<div class="absolute inset-0 opacity-40 pointer-events-none" data-alt="Abstract glowing network graph with cyan and purple nodes">
+<svg height="100%" viewbox="0 0 800 800" width="100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="200" cy="200" fill="#06dcf9" r="4"></circle>
+<circle cx="600" cy="150" fill="#7C4DFF" r="3"></circle>
+<circle cx="400" cy="400" fill="#06dcf9" r="5"></circle>
+<circle cx="150" cy="600" fill="#7C4DFF" r="3"></circle>
+<circle cx="700" cy="550" fill="#06dcf9" r="4"></circle>
+<line stroke="#06dcf9" stroke-dasharray="4" stroke-width="0.5" x1="200" x2="400" y1="200" y2="400"></line>
+<line stroke="#7C4DFF" stroke-dasharray="4" stroke-width="0.5" x1="600" x2="400" y1="150" y2="400"></line>
+<line stroke="#7C4DFF" stroke-dasharray="4" stroke-width="0.5" x1="150" x2="400" y1="600" y2="400"></line>
+<line stroke="#06dcf9" stroke-dasharray="4" stroke-width="0.5" x1="700" x2="400" y1="550" y2="400"></line>
+</svg>
+</div>
+<div class="relative z-10 flex items-center gap-3">
+<div class="size-10 bg-primary/20 rounded-lg flex items-center justify-center border border-primary/40">
+<span class="material-symbols-outlined text-primary text-2xl">shield_with_heart</span>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-white">GraphShield</h1>
+</div>
+<div class="relative z-10 max-w-md">
+<h2 class="text-5xl font-extrabold leading-tight text-white mb-6">
+                    Detect. Visualize. <br/>
+<span class="text-transparent bg-clip-text gradient-primary">Protect.</span>
+</h2>
+<p class="text-slate-400 text-lg leading-relaxed">
+                    Advanced graph analytics to pinpoint money muling networks before they impact your financial ecosystem.
+                </p>
+</div>
+<div class="relative z-10 flex items-center gap-6 text-sm text-slate-500 font-medium">
+<span>© 2024 GraphShield Inc.</span>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+<!-- Right Panel: Sign-In Form -->
+<div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-20">
+<div class="w-full max-w-[480px]">
+<!-- Header -->
+<div class="mb-10">
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome Back</h2>
+<p class="text-slate-500 dark:text-slate-400">Sign in to your GraphShield account to access your dashboard.</p>
+</div>
+<!-- Glassmorphic Card -->
+<div class="glass-panel p-8 rounded-2xl shadow-2xl">
+<form class="space-y-6">
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
+<div class="relative flex items-center glow-on-focus transition-all duration-200 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50">
+<span class="material-symbols-outlined absolute left-3 text-slate-400">mail</span>
+<input class="w-full bg-transparent border-none py-3.5 pl-11 pr-4 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-0 text-sm" placeholder="name@company.com" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<div class="flex justify-between items-center ml-1">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+<a class="text-xs font-bold text-primary hover:opacity-80 transition-opacity" href="#">Forgot password?</a>
+</div>
+<div class="relative flex items-center glow-on-focus transition-all duration-200 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50">
+<span class="material-symbols-outlined absolute left-3 text-slate-400">lock</span>
+<input class="w-full bg-transparent border-none py-3.5 pl-11 pr-4 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-0 text-sm" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 text-slate-400 hover:text-slate-200 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center gap-2 px-1">
+<input class="rounded border-slate-300 dark:border-slate-700 bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" id="remember" type="checkbox"/>
+<label class="text-sm text-slate-500 dark:text-slate-400 select-none" for="remember">Remember this device</label>
+</div>
+<!-- Sign In Button -->
+<button class="w-full py-4 gradient-primary text-background-dark font-bold rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all" type="submit">
+                            Sign In to Dashboard
+                        </button>
+</form>
+<!-- Divider -->
+<div class="relative my-8">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-slate-200 dark:border-slate-800"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase">
+<span class="bg-background-light dark:bg-[#1a1c24] px-4 text-slate-500 font-medium">Or continue with</span>
+</div>
+</div>
+<!-- OAuth Buttons -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-semibold">
+<img alt="" class="size-5" data-alt="Google logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_jbfUxG3EQBMSaI_TGiA1jnfAPOic1VmClnDm9kbpUfYmOjKpqEUS9ZhEJ53cv7UkXRYgwJowci8qrD0Z6cU_Et33yoi9sAanTJZkIzarRl0dmRdsoytCLFGQNpFCApegO9nWSka2ogWsViml8eRC1DDOr2LZlJb_6ahwzUlwq6EY9DOGTG_VydpGNfxr9lqyJpUp9mszfXO8xhB5plpTecWnVlDNr7i1zGHomNikAC1bFEH5VDKynS3l_1O6uzCsu8rwrep6Cc5B"/>
+<span>Google</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-semibold">
+<svg aria-hidden="true" class="size-5 fill-slate-900 dark:fill-white" data-alt="GitHub logo icon" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
+</svg>
+<span>GitHub</span>
+</button>
+</div>
+</div>
+<!-- Footer Link -->
+<div class="mt-10 text-center">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        Don't have an account? 
+                        <a class="text-primary hover:underline font-bold transition-all underline-offset-4 ml-1" href="#">Sign up for free</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chain-Trace Fraud Detection Dashboard - Variant 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#06dcf9",
+                        "accent-purple": "#7C4DFF",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#14161F",
+                        "card-dark": "rgba(30, 41, 59, 0.4)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body { font-family: 'Inter', sans-serif; }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #06dcf9 0%, #7C4DFF 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
+<header class="sticky top-0 z-50 glass border-b border-white/10 px-6 py-3">
+<div class="max-w-[1400px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg flex items-center justify-center relative">
+<span class="material-symbols-outlined text-background-dark font-bold text-[20px]">link</span>
+<span class="material-symbols-outlined text-background-dark font-black text-[12px] absolute -bottom-0.5 -right-0.5 bg-accent-purple rounded-full p-0.5 border border-primary">manage_search</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent-purple bg-clip-text text-transparent">Chain-Trace</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-primary text-sm font-semibold" href="#">Dashboard</a>
+<a class="text-slate-400 hover:text-white transition-colors text-sm font-medium" href="#">Transactions</a>
+<a class="text-slate-400 hover:text-white transition-colors text-sm font-medium" href="#">Analytics</a>
+<a class="text-slate-400 hover:text-white transition-colors text-sm font-medium" href="#">Settings</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-400 hover:text-white relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-background-dark"></span>
+</button>
+<div class="h-8 w-[1px] bg-white/10 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold">Alex Rivera</p>
+<p class="text-[10px] text-slate-500">Security Lead</p>
+</div>
+<img alt="User profile avatar of security analyst" class="size-9 rounded-full border border-white/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpN8Q6U5x2eacva97h5IHwCHx7ZNtyDqAVtDpaxxHecqY7cY5RoTklU0meWWdrfcLE7XGRXPI1-Z493CETsnSpVfVAkBUNsOB90f8z3WLLyQnwh2D6wReeYLDNOrxQWaUJCI3b7B6mOTIQElIrGIn2EQNutiCPhSBTKyzILsta0jSYJfM4p9p9iez3xuG-GKhd9ToeGlmRhdCB9iTfKVvaIbKgem-JKjczo2DkI__tbbjYUB-e7IgOFuitccnqqwrg_vmeVA8VkDPE"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1400px] mx-auto p-6 space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="glass p-5 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-slate-400 text-sm font-medium">Total Transactions</span>
+<span class="material-symbols-outlined text-primary/50">payments</span>
+</div>
+<div>
+<h3 class="text-2xl font-bold">12,847</h3>
+<p class="text-emerald-400 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +12.4% vs last week
+                </p>
+</div>
+</div>
+<div class="glass p-5 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-slate-400 text-sm font-medium">Flagged Accounts</span>
+<span class="material-symbols-outlined text-red-500/50">warning</span>
+</div>
+<div>
+<h3 class="text-2xl font-bold">23</h3>
+<p class="text-red-400 text-xs font-medium mt-1">Immediate action required</p>
+</div>
+</div>
+<div class="glass p-5 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-slate-400 text-sm font-medium">Detection Accuracy</span>
+<span class="material-symbols-outlined text-primary/50">verified</span>
+</div>
+<div>
+<h3 class="text-2xl font-bold">94.7%</h3>
+<p class="text-emerald-400 text-xs font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> AI Engine Active
+                </p>
+</div>
+</div>
+<div class="glass p-5 rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-slate-400 text-sm font-medium">Last Scan</span>
+<span class="material-symbols-outlined text-primary/50">schedule</span>
+</div>
+<div>
+<h3 class="text-2xl font-bold">2h ago</h3>
+<p class="text-slate-500 text-xs mt-1">Automated daily check</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="glass rounded-xl p-6 flex-1 flex flex-col">
+<h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-purple">psychology</span>
+                    AI Fraud Detection
+                </h2>
+<div class="space-y-6 flex-1">
+<div class="p-4 rounded-xl bg-white/5 border border-white/5">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-bold text-slate-400">Analysis Engine</span>
+<span class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase">
+<span class="size-2 bg-emerald-400 rounded-full"></span> Ready
+                            </span>
+</div>
+<button class="w-full gradient-btn py-4 rounded-xl font-bold text-background-dark shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
+                            Analyze Transactions
+                        </button>
+</div>
+<div class="space-y-4">
+<h3 class="text-sm font-bold">Latest Findings</h3>
+<div class="flex items-start gap-4 p-4 glass rounded-xl border-l-4 border-l-red-500">
+<div class="bg-red-500/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-red-500 text-xl">group_remove</span>
+</div>
+<div>
+<p class="text-sm font-bold">Mule Network Detected</p>
+<p class="text-xs text-slate-400 mt-0.5">23 suspicious accounts identified in Cluster #4-A.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 glass rounded-xl border-l-4 border-l-primary">
+<div class="bg-primary/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary text-xl">verified_user</span>
+</div>
+<div>
+<p class="text-sm font-bold">Verification Complete</p>
+<p class="text-xs text-slate-400 mt-0.5">982 transactions cleared as legitimate today.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-white/10">
+<div class="flex justify-between items-end mb-2">
+<p class="text-xs text-slate-500">Processing Capacity</p>
+<p class="text-xs font-bold">78%</p>
+</div>
+<div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-accent-purple w-[78%]"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-6 space-y-6">
+<div class="glass rounded-xl p-6">
+<h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">upload_file</span>
+                    Data Ingestion
+                </h2>
+<div class="border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-all group">
+<div class="bg-primary/20 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+</div>
+<h4 class="text-sm font-bold">Drag and drop CSV files</h4>
+<p class="text-xs text-slate-500 mt-1">Supports bulk transaction logs up to 50MB</p>
+<button class="mt-6 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-colors">Select Files</button>
+</div>
+</div>
+<div class="glass rounded-xl overflow-hidden">
+<div class="p-4 border-b border-white/10 flex justify-between items-center">
+<h2 class="text-sm font-bold">Transaction Preview</h2>
+<button class="gradient-btn px-4 py-1.5 rounded-lg text-[11px] font-bold text-background-dark uppercase tracking-wider">
+                        Upload to Database
+                    </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs">
+<thead class="bg-white/5 text-slate-400 uppercase tracking-tighter">
+<tr>
+<th class="px-4 py-3 font-semibold">Sender</th>
+<th class="px-4 py-3 font-semibold">Receiver</th>
+<th class="px-4 py-3 font-semibold text-right">Amount</th>
+<th class="px-4 py-3 font-semibold">Timestamp</th>
+<th class="px-4 py-3 font-semibold text-center">Risk</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 font-medium">Acct-9821-X</td>
+<td class="px-4 py-4">Acct-0042-B</td>
+<td class="px-4 py-4 text-right font-bold text-primary">$4,200.00</td>
+<td class="px-4 py-4 text-slate-500">2023-10-24 14:22</td>
+<td class="px-4 py-4 text-center">
+<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px] font-bold">Low</span>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors bg-red-500/5">
+<td class="px-4 py-4 font-medium">Acct-4492-Z</td>
+<td class="px-4 py-4">Acct-3310-P</td>
+<td class="px-4 py-4 text-right font-bold text-primary">$8,900.00</td>
+<td class="px-4 py-4 text-slate-500">2023-10-24 14:30</td>
+<td class="px-4 py-4 text-center">
+<span class="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold">High</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="glass rounded-xl overflow-hidden min-h-[700px] flex flex-col">
+<div class="p-6 border-b border-white/10 flex flex-wrap justify-between items-center gap-4">
+<div>
+<h2 class="text-lg font-bold">Transaction Network Graph</h2>
+<p class="text-xs text-slate-500 mt-1">Visualization of account relationships and fund flow patterns</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border-white/5">
+<span class="size-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(6,220,249,0.5)]"></span> Normal
+                </div>
+<div class="flex items-center gap-2 glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border-white/5">
+<span class="size-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Flagged
+                </div>
+<div class="h-6 w-[1px] bg-white/10"></div>
+<div class="flex bg-white/5 p-1 rounded-lg">
+<button class="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span class="material-symbols-outlined text-sm">zoom_in</span></button>
+<button class="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span class="material-symbols-outlined text-sm">zoom_out</span></button>
+<button class="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span class="material-symbols-outlined text-sm">filter_list</span></button>
+</div>
+</div>
+</div>
+<div class="relative flex-1 bg-[radial-gradient(circle_at_center,#1e293b_0%,#14161F_100%)] overflow-hidden">
+<div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#06dcf9 1px, transparent 1px), linear-gradient(90deg, #06dcf9 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<svg class="w-full h-full" viewBox="0 0 1000 600">
+<line stroke="rgba(255,255,255,0.1)" stroke-width="1.5" x1="500" x2="420" y1="300" y2="200"></line>
+<line stroke="rgba(255,255,255,0.1)" stroke-width="1.5" x1="500" x2="580" y1="300" y2="200"></line>
+<line stroke="#ef4444" stroke-dasharray="4" stroke-width="1.5" x1="500" x2="420" y1="300" y2="400"></line>
+<line stroke="rgba(255,255,255,0.1)" stroke-width="1.5" x1="500" x2="580" y1="300" y2="400"></line>
+<line stroke="#ef4444" stroke-width="2" x1="420" x2="340" y1="400" y2="480"></line>
+<circle cx="500" cy="300" fill="#06dcf9" fill-opacity="0.8" r="14"></circle>
+<circle cx="420" cy="200" fill="#06dcf9" fill-opacity="0.6" r="10"></circle>
+<circle cx="580" cy="200" fill="#06dcf9" fill-opacity="0.6" r="10"></circle>
+<circle cx="580" cy="400" fill="#06dcf9" fill-opacity="0.6" r="10"></circle>
+<circle class="animate-pulse" cx="420" cy="400" fill="#ef4444" r="12"></circle>
+<circle cx="340" cy="480" fill="#ef4444" fill-opacity="0.9" r="10"></circle>
+<text fill="white" font-size="10" font-weight="bold" x="518" y="305">Root Acct</text>
+<text fill="#ef4444" font-size="10" font-weight="bold" x="365" y="405">Mule-01</text>
+</svg>
+</div>
+<div class="absolute bottom-6 left-6 glass p-4 rounded-xl max-w-xs border border-white/20">
+<div class="flex items-center gap-3 mb-2">
+<div class="size-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-red-500 text-lg">error</span>
+</div>
+<div>
+<p class="text-xs font-bold">Detected Mule Cluster</p>
+<p class="text-[10px] text-slate-400">Node ID: Acct-3310-P</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-3">
+<div class="bg-white/5 rounded p-2">
+<p class="text-[9px] text-slate-500 uppercase font-bold">Connections</p>
+<p class="text-xs font-bold">14 High-risk</p>
+</div>
+<div class="bg-white/5 rounded p-2">
+<p class="text-[9px] text-slate-500 uppercase font-bold">Volume</p>
+<p class="text-xs font-bold">$1.2M / 24h</p>
+</div>
+</div>
+<button class="w-full mt-3 py-1.5 bg-red-500 hover:bg-red-600 rounded text-[10px] font-bold uppercase tracking-wider transition-colors">Freeze Network</button>
+</div>
+</div>
+</div>
+</main>
+<footer class="max-w-[1400px] mx-auto p-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-xs">
+<p>© 2023 Chain-Trace AI Platform. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">System Status</a>
+<a class="hover:text-primary transition-colors" href="#">Contact Intelligence Team</a>
+</div>
+</footer>
+
+</body></html>

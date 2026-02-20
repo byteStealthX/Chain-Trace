@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphShield | Fraud Summary &amp; Results</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#06dcf9",
+            "background-light": "#f5f8f8",
+            "background-dark": "#0f1117",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-hover:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(6, 220, 249, 0.3);
+    }
+    .active-glow {
+      box-shadow: 0 0 15px rgba(6, 220, 249, 0.2);
+    }
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
+<!-- Left Sidebar (Narrow Icon Navigation) -->
+<aside class="w-20 border-r border-slate-200 dark:border-slate-800 flex flex-col items-center py-8 gap-8 bg-background-light dark:bg-background-dark sticky top-0 h-screen">
+<div class="mb-4">
+<div class="size-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary active-glow">
+<span class="material-symbols-outlined font-bold">shield</span>
+</div>
+</div>
+<nav class="flex flex-col gap-6 flex-1">
+<a class="p-2 rounded-lg text-slate-500 hover:text-primary transition-colors" href="#" title="Dashboard">
+<span class="material-symbols-outlined">grid_view</span>
+</a>
+<a class="p-2 rounded-lg text-slate-500 hover:text-primary transition-colors" href="#" title="Transactions">
+<span class="material-symbols-outlined">swap_horiz</span>
+</a>
+<a class="p-2 rounded-lg text-slate-500 hover:text-primary transition-colors" href="#" title="Analytics">
+<span class="material-symbols-outlined">analytics</span>
+</a>
+<a class="p-2 rounded-lg bg-primary/10 text-primary active-glow" href="#" title="Results">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">security_update_warning</span>
+</a>
+<a class="p-2 rounded-lg text-slate-500 hover:text-primary transition-colors" href="#" title="Settings">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</nav>
+<div class="mt-auto">
+<div class="size-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
+<img alt="User" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSDBuNUlkOvDsDY8-4sNBRvn6pBsMbUx7KBS6x14BBVgsE8ZD-yZWJFrS9-rUJY2yNyo9cucCnHsznLeSKAG9c2Fz9dDfWWVllEE_dBf3AfFP1OGu9Zk43p_6cSZMuHj5CF1pzYmJnPocgz9LwE18M9QbXc9Rbl1eE9MAHW_glOY3h3ubg7Hsg78WzVkry4vW1AFxNRJrTdtpiQ0RI6BVzw--fxF8_oBVBMvmy_mSCYhCaz5cX1alvl9VSmrbIfN4to7xL-1UeYcNr"/>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- Top Header -->
+<header class="p-8 pb-4 flex flex-wrap justify-between items-end gap-6">
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Fraud Detection Results</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm">
+          Last scan: <span class="text-slate-700 dark:text-slate-300 font-medium">Feb 19, 2026 at 3:15 PM</span> — 
+          <span class="text-red-500 font-semibold">23 flagged accounts</span>
+</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 rounded-lg border border-primary/40 text-primary hover:bg-primary/10 font-medium transition-all text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">download</span>
+          Download JSON
+        </button>
+<button class="px-5 py-2.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-700 font-medium transition-all text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">csv</span>
+          Export CSV
+        </button>
+</div>
+</header>
+<!-- Summary Row -->
+<section class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="glass p-6 rounded-xl flex items-center justify-between group cursor-default">
+<div>
+<p class="text-slate-400 text-sm font-medium mb-1">Flagged Accounts</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-slate-100">23</span>
+<span class="text-red-500 text-sm font-semibold flex items-center">
+<span class="material-symbols-outlined text-xs">trending_up</span> 12%
+            </span>
+</div>
+</div>
+<div class="size-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">warning</span>
+</div>
+</div>
+<div class="glass p-6 rounded-xl flex items-center justify-between group cursor-default">
+<div>
+<p class="text-slate-400 text-sm font-medium mb-1">Suspicious Chains</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-slate-100">156</span>
+<span class="text-primary text-sm font-semibold flex items-center">
+<span class="material-symbols-outlined text-xs">link</span> Active
+            </span>
+</div>
+</div>
+<div class="size-12 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">hub</span>
+</div>
+</div>
+<div class="glass p-6 rounded-xl flex items-center justify-between group cursor-default">
+<div>
+<p class="text-slate-400 text-sm font-medium mb-1">Risk Score (Avg)</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-slate-100">78.4</span>
+<span class="text-slate-500 text-sm">/ 100</span>
+</div>
+</div>
+<div class="relative size-14">
+<svg class="size-14 progress-ring">
+<circle class="text-slate-200 dark:text-slate-800" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-orange-500" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-dasharray="150" stroke-dashoffset="32" stroke-linecap="round" stroke-width="4"></circle>
+</svg>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-orange-500">78%</span>
+</div>
+</div>
+</section>
+<!-- Main Table Section -->
+<section class="px-8 pb-8 flex-1">
+<div class="glass rounded-xl overflow-hidden flex flex-col">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/5">
+<h2 class="font-semibold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">list</span>
+            High-Risk Entities
+          </h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="bg-background-light dark:bg-background-dark/50 border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary w-64 transition-all" placeholder="Search Account ID..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+<th class="px-6 py-4">Rank</th>
+<th class="px-6 py-4">Account ID</th>
+<th class="px-6 py-4 text-center">Risk Score</th>
+<th class="px-6 py-4">Connected</th>
+<th class="px-6 py-4">Volume</th>
+<th class="px-6 py-4">Reason</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+<!-- Sample Row 1 (Critical) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">01</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x71C...a4b</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-red-500/20 text-red-500 font-bold border border-red-500/30">94</span>
+</td>
+<td class="px-6 py-4">42</td>
+<td class="px-6 py-4 font-medium">$124,500</td>
+<td class="px-6 py-4 text-slate-400">High Velocity Transfers</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-red-500 animate-pulse"></span> Critical</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 2 (Critical) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">02</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x12A...f92</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-red-500/20 text-red-500 font-bold border border-red-500/30">91</span>
+</td>
+<td class="px-6 py-4">38</td>
+<td class="px-6 py-4 font-medium">$98,200</td>
+<td class="px-6 py-4 text-slate-400">Rapid Structuring</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-red-500"></span> Critical</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 3 (Warning) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">03</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x88B...c11</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">88</span>
+</td>
+<td class="px-6 py-4">25</td>
+<td class="px-6 py-4 font-medium">$45,000</td>
+<td class="px-6 py-4 text-slate-400">Layering Pattern</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 4 (Warning) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">04</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x45E...d33</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">82</span>
+</td>
+<td class="px-6 py-4">19</td>
+<td class="px-6 py-4 font-medium">$32,100</td>
+<td class="px-6 py-4 text-slate-400">New Account Activity</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 5 (Warning) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">05</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x99F...e22</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-500 font-bold border border-orange-500/30">76</span>
+</td>
+<td class="px-6 py-4">12</td>
+<td class="px-6 py-4 font-medium">$15,400</td>
+<td class="px-6 py-4 text-slate-400">Irregular Hours</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-orange-500"></span> Warning</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 6 (Elevated) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">06</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x22D...a88</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">72</span>
+</td>
+<td class="px-6 py-4">31</td>
+<td class="px-6 py-4 font-medium">$67,000</td>
+<td class="px-6 py-4 text-slate-400">Geographic Anomaly</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-yellow-500"></span> Warning</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 7 (Elevated) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">07</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x55C...b44</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">58</span>
+</td>
+<td class="px-6 py-4">8</td>
+<td class="px-6 py-4 font-medium">$5,200</td>
+<td class="px-6 py-4 text-slate-400">Small Round Sums</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-slate-400"></span> Elevated</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+<!-- Sample Row 8 (Elevated) -->
+<tr class="glass-hover transition-all text-sm group">
+<td class="px-6 py-4 font-medium text-slate-500">08</td>
+<td class="px-6 py-4"><span class="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary">0x33A...f00</span></td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/30">52</span>
+</td>
+<td class="px-6 py-4">5</td>
+<td class="px-6 py-4 font-medium">$2,100</td>
+<td class="px-6 py-4 text-slate-400">Frequent Transfers</td>
+<td class="px-6 py-4"><span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-slate-400"></span> Elevated</span></td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:underline font-semibold decoration-primary/30 underline-offset-4" href="#">View Details</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Bottom Panel: Analytics -->
+<section class="px-8 pb-12">
+<div class="glass p-6 rounded-xl">
+<h3 class="font-semibold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">bar_chart</span>
+          Top 10 Flagged Accounts by Risk Score
+        </h3>
+<div class="space-y-4">
+<!-- Gradient Bar Item 1 -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs text-slate-400">
+<span>0x71C...a4b</span>
+<span class="text-red-500 font-bold">94%</span>
+</div>
+<div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary via-orange-500 to-red-500" style="width: 94%"></div>
+</div>
+</div>
+<!-- Gradient Bar Item 2 -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs text-slate-400">
+<span>0x12A...f92</span>
+<span class="text-red-500 font-bold">91%</span>
+</div>
+<div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary via-orange-500 to-red-500" style="width: 91%"></div>
+</div>
+</div>
+<!-- Gradient Bar Item 3 -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs text-slate-400">
+<span>0x88B...c11</span>
+<span class="text-orange-500 font-bold">88%</span>
+</div>
+<div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-orange-500" style="width: 88%"></div>
+</div>
+</div>
+<!-- More items simplified -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs text-slate-400">
+<span>0x45E...d33</span>
+<span class="text-orange-500 font-bold">82%</span>
+</div>
+<div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-orange-500" style="width: 82%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

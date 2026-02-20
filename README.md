@@ -1,103 +1,73 @@
-# 🔗 Chain-Trace
+# Welcome to your Lovable project
 
-**Graph-Based Financial Crime Detection Engine**
+## Project info
 
-Chain-Trace is a full-stack web application that detects money muling networks and financial fraud patterns through interactive graph visualization and intelligent transaction analysis.
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-Backend-3FCF8E?logo=supabase&logoColor=white)
+## How can I edit this code?
 
----
+There are several ways of editing your application.
 
-## ✨ Features
+**Use Lovable**
 
-- **CSV Upload** — Bulk import transaction data via drag-and-drop
-- **Dashboard** — Real-time overview of transaction volumes, risk scores, and flagged accounts
-- **Graph Visualization** — Interactive force-directed graph mapping account relationships and suspicious flows
-- **Reports** — Filterable, sortable fraud report table with CSV export
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-## 🛠 Tech Stack
+Changes made via Lovable will be committed automatically to this repo.
 
-| Layer       | Technology                          |
-| ----------- | ----------------------------------- |
-| Frontend    | React 19, TypeScript, Vite          |
-| Styling     | Tailwind CSS 4                      |
-| Backend/DB  | Supabase (PostgreSQL, Auth, Storage)|
-| Charts      | Recharts                            |
-| Graph       | react-force-graph-2d                |
-| CSV Parsing | PapaParse                           |
-| Routing     | React Router v7                     |
+**Use your preferred IDE**
 
-## 📂 Folder Structure
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-```
-src/
-├── assets/          # Static assets (images, fonts)
-├── components/
-│   ├── layout/      # Navbar, Layout, Footer
-│   └── ui/          # Button, Card, FileUpload, StatsCard
-├── lib/             # Utilities & config (supabase.ts)
-├── pages/           # Home, Dashboard, GraphView, Reports
-├── types/           # Shared TypeScript interfaces
-├── App.tsx          # Root component + Router
-├── main.tsx         # Entry point
-└── index.css        # Global styles + Tailwind
-```
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-## 🚀 Getting Started
+Follow these steps:
 
-### Prerequisites
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-- [Node.js](https://nodejs.org/) ≥ 18
-- A [Supabase](https://supabase.com/) project (free tier works)
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-### Installation
+# Step 3: Install the necessary dependencies.
+npm i
 
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/Chain-Trace.git
-cd Chain-Trace
-
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-# Fill in your Supabase credentials in .env
-
-# Start development server
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-### Environment Variables
+**Edit a file directly in GitHub**
 
-Create a `.env` file in the project root (see `.env.example`):
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-```
+**Use GitHub Codespaces**
 
-## 📦 Scripts
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-| Command           | Description                  |
-| ----------------- | ---------------------------- |
-| `npm run dev`     | Start dev server             |
-| `npm run build`   | Production build             |
-| `npm run preview` | Preview production build     |
-| `npm run lint`    | Run ESLint                   |
+## What technologies are used for this project?
 
-## 🤝 Contributing
+This project is built with:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## 📄 License
+## How can I deploy this project?
 
-This project is licensed under the [MIT License](LICENSE).
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

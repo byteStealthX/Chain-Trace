@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphShield Transaction List Page</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00e1ff",
+                        "accent-purple": "#7C4DFF",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0F1117",
+                        "glass-dark": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.1)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .table-row-hover:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .flagged-border {
+            border-left: 3px solid #ef4444;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex overflow-hidden">
+<!-- Narrow Sidebar -->
+<aside class="w-16 md:w-20 flex flex-col items-center py-8 border-r border-glass-border bg-background-light dark:bg-background-dark z-20">
+<div class="mb-10">
+<div class="size-10 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,225,255,0.3)]">
+<span class="material-symbols-outlined text-background-dark font-bold">shield</span>
+</div>
+</div>
+<nav class="flex flex-col gap-6">
+<a class="p-3 rounded-lg text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+</a>
+<a class="p-3 rounded-lg text-primary bg-primary/10 border border-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined">sync_alt</span>
+</a>
+<a class="p-3 rounded-lg text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+</a>
+<a class="p-3 rounded-lg text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">verified</span>
+</a>
+<div class="w-8 h-px bg-glass-border my-2"></div>
+<a class="p-3 rounded-lg text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</nav>
+<div class="mt-auto">
+<div class="size-10 rounded-full border-2 border-primary/30 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User avatar profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQi3U_CLdHk-F40ufnT6t_UWhv0jsakj8-YmGW_toYsj8BuZCj5Jx5TVh8qDdPhEWMmT6jBhm5ZKLxxZ7rvPQV9F0DGLaWR62DgNI2manWcxj23redcDcNZyElGjweex3agfJuezHufsErwBityERyGV0doBxX_F7o_J5SAZCxJ_KdSJJkFhzIjCXe4ZC9EhCmDU5RecY8AY43JwjbwgAoUCP1chkCW7GNHy7pHFC6lMuRlOk1Z2bLmGm4ODOoeUGhMVlqxqaf-vF-"/>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col relative overflow-hidden">
+<!-- Header Section -->
+<header class="p-6 md:p-8 flex flex-col gap-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Transactions</h1>
+<div class="flex flex-wrap items-center gap-3">
+<!-- Search Bar -->
+<div class="relative min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full bg-slate-100 dark:bg-glass-dark border-glass-border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary placeholder:text-slate-500" placeholder="Search Transaction ID, Sender..." type="text"/>
+</div>
+<!-- Filters -->
+<div class="flex items-center glassmorphism rounded-lg p-1">
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md bg-primary text-background-dark shadow-sm">All</button>
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-slate-100 transition-colors">Flagged</button>
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-slate-100 transition-colors">Clean</button>
+</div>
+<button class="flex items-center gap-2 glassmorphism px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-xl">calendar_today</span>
+<span>Oct 1 - Oct 31, 2023</span>
+</button>
+</div>
+</div>
+<!-- Stats Mini Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="glassmorphism p-4 rounded-lg flex items-center justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 size-16 bg-primary/5 rounded-full blur-2xl transition-all group-hover:bg-primary/10"></div>
+<div>
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Transactions</p>
+<p class="text-2xl font-bold mt-1">12,847</p>
+</div>
+<span class="material-symbols-outlined text-primary/40 text-3xl">list_alt</span>
+</div>
+<div class="glassmorphism p-4 rounded-lg flex items-center justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 size-16 bg-accent-purple/5 rounded-full blur-2xl transition-all group-hover:bg-accent-purple/10"></div>
+<div>
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Today's Volume</p>
+<p class="text-2xl font-bold mt-1">342</p>
+</div>
+<span class="material-symbols-outlined text-accent-purple/40 text-3xl">bolt</span>
+</div>
+<div class="glassmorphism p-4 rounded-lg flex items-center justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 size-16 bg-red-500/5 rounded-full blur-2xl transition-all group-hover:bg-red-500/10"></div>
+<div>
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Flagged Mules</p>
+<p class="text-2xl font-bold mt-1 text-red-500">89</p>
+</div>
+<span class="material-symbols-outlined text-red-500/40 text-3xl">report</span>
+</div>
+<div class="glassmorphism p-4 rounded-lg flex items-center justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 size-16 bg-primary/5 rounded-full blur-2xl transition-all group-hover:bg-primary/10"></div>
+<div>
+<p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Average Amount</p>
+<p class="text-2xl font-bold mt-1 text-primary">$1,247</p>
+</div>
+<span class="material-symbols-outlined text-primary/40 text-3xl">payments</span>
+</div>
+</div>
+</header>
+<!-- Main Transactions Table Section -->
+<section class="flex-1 px-8 pb-32 overflow-y-auto scrollbar-hide">
+<div class="glassmorphism rounded-lg overflow-hidden flex flex-col h-full">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-white/5 border-b border-glass-border">
+<tr>
+<th class="p-4 w-12"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">#</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+<div class="flex items-center gap-1 cursor-pointer group">
+                                        Transaction ID <span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">expand_more</span>
+</div>
+</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Sender</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Receiver</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Amount</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Curr</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Timestamp</th>
+<th class="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-glass-border">
+<!-- Row 1: Flagged -->
+<tr class="table-row-hover flagged-border transition-colors group">
+<td class="p-4"><input checked="" class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">01</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-82910-A</td>
+<td class="p-4 text-sm font-medium">James Sterling</td>
+<td class="p-4 text-sm font-medium">Digital Exchange LLC</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$4,500.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 14:22:10</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold w-fit border border-red-500/20">
+<span class="size-1.5 rounded-full bg-red-500"></span> Flagged
+                                    </span>
+</td>
+</tr>
+<!-- Row 2: Clean -->
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">02</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-94321-B</td>
+<td class="p-4 text-sm font-medium">Alice Henderson</td>
+<td class="p-4 text-sm font-medium">Starbucks Corp</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$15.24</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 13:05:44</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<!-- Row 3: Flagged -->
+<tr class="table-row-hover flagged-border transition-colors group">
+<td class="p-4"><input checked="" class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">03</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-10293-F</td>
+<td class="p-4 text-sm font-medium">Unknown Wallet 0x4f...</td>
+<td class="p-4 text-sm font-medium">Michael Chen</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$12,900.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 11:15:02</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold w-fit border border-red-500/20">
+<span class="size-1.5 rounded-full bg-red-500"></span> Flagged
+                                    </span>
+</td>
+</tr>
+<!-- Row 4: Clean -->
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">04</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-55421-E</td>
+<td class="p-4 text-sm font-medium">Eleanor Rigby</td>
+<td class="p-4 text-sm font-medium">Amazon Web Services</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$1,450.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 10:42:19</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<!-- Row 5: Flagged -->
+<tr class="table-row-hover flagged-border transition-colors group">
+<td class="p-4"><input checked="" class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">05</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-88219-X</td>
+<td class="p-4 text-sm font-medium">Robert Wilson</td>
+<td class="p-4 text-sm font-medium">Cayman Trading Ltd</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$8,000.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 09:59:00</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold w-fit border border-red-500/20">
+<span class="size-1.5 rounded-full bg-red-500"></span> Flagged
+                                    </span>
+</td>
+</tr>
+<!-- More sample rows... -->
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">06</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-22103-W</td>
+<td class="p-4 text-sm font-medium">Sarah Jenkins</td>
+<td class="p-4 text-sm font-medium">Target Retail Inc</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$142.33</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 09:12:44</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">07</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-33921-H</td>
+<td class="p-4 text-sm font-medium">Greg House</td>
+<td class="p-4 text-sm font-medium">Princeton Hospital</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$1,200.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 08:30:11</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">08</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-00428-K</td>
+<td class="p-4 text-sm font-medium">Walter White</td>
+<td class="p-4 text-sm font-medium">A1A Car Wash</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$3,540.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 07:44:52</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">09</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-11822-M</td>
+<td class="p-4 text-sm font-medium">Diana Prince</td>
+<td class="p-4 text-sm font-medium">The Louvre Museum</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$220.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 07:12:03</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+<tr class="table-row-hover transition-colors">
+<td class="p-4"><input class="rounded border-glass-border bg-transparent text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/></td>
+<td class="p-4 text-sm text-slate-500 font-medium">10</td>
+<td class="p-4 text-sm font-mono text-slate-300">TX-77321-Y</td>
+<td class="p-4 text-sm font-medium">Bruce Wayne</td>
+<td class="p-4 text-sm font-medium">Arkham Asylum Fund</td>
+<td class="p-4 text-sm font-bold text-right tabular-nums">$50,000.00</td>
+<td class="p-4 text-sm text-slate-500">USD</td>
+<td class="p-4 text-sm text-slate-400">Oct 24, 06:40:55</td>
+<td class="p-4">
+<span class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold w-fit border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500"></span> Clean
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-glass-border flex items-center justify-between">
+<p class="text-sm text-slate-400">Showing 1 to 10 of 12,847 transactions</p>
+<div class="flex gap-2">
+<button class="p-2 glassmorphism rounded hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-2 glassmorphism rounded hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Floating Bottom Action Bar -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-6 px-6 py-4 glassmorphism rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-primary/30">
+<div class="flex items-center gap-3 border-r border-glass-border pr-6">
+<span class="size-6 bg-primary text-background-dark text-xs font-bold flex items-center justify-center rounded-full">3</span>
+<span class="text-sm font-medium text-slate-200">Selected Transactions</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-semibold px-4 py-2 rounded-lg transition-colors border border-glass-border">
+<span class="material-symbols-outlined text-xl">done_all</span>
+                    Mark as Reviewed
+                </button>
+<button class="flex items-center gap-2 bg-accent-purple/20 hover:bg-accent-purple/30 text-accent-purple text-sm font-semibold px-4 py-2 rounded-lg transition-colors border border-accent-purple/30">
+<span class="material-symbols-outlined text-xl">visibility</span>
+                    Add to Watchlist
+                </button>
+<button class="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold px-4 py-2 rounded-lg transition-colors border border-primary/40">
+<span class="material-symbols-outlined text-xl">ios_share</span>
+                    Export Selected
+                </button>
+</div>
+<button class="ml-4 p-2 text-slate-500 hover:text-slate-300 transition-colors">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+</main>
+</body></html>
