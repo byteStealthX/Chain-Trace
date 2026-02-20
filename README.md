@@ -104,6 +104,10 @@ If you are **not** using the "Blueprint" feature (i.e. you created services manu
     - Set **Root Directory** to `frontend`.
     - Set **Build Command** to `npm install && npm run build`.
     - Set **Publish Directory** to `dist`.
+    - **Add Rewrite Rule** (under Redirects/Rewrites):
+        - **Source**: `/*`
+        - **Destination**: `/index.html`
+        - **Action**: `Rewrite` (This fixes "Not Found" on refresh)
 
 3.  **Cron Job (Optional)**:
     - Create a new **Cron Job**.
