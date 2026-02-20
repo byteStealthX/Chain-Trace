@@ -1,10 +1,86 @@
 
 import { Link } from "react-router-dom";
 import { ModeToggle } from "../components/mode-toggle";
+import { useDashboardStats } from "../hooks/useData";
+import { useRef, useState } from "react";
+import Papa from "papaparse";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 const Dashboard = () => {
+    const { stats, loading } = useDashboardStats();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                try {
+                    const rows = results.data as any[];
+                    console.log("Parsed CSV:", rows);
+
+                    // 1. Extract unique accounts
+                    const accounts = new Set<string>();
+                    rows.forEach(row => {
+                        if (row.sender_id) accounts.add(row.sender_id);
+                        if (row.receiver_id) accounts.add(row.receiver_id);
+                    });
+
+                    // 2. Upsert accounts
+                    const accountUpdates = Array.from(accounts).map(id => ({
+                        account_id: id,
+                        account_name: `Account ${id}`,
+                        risk_level: 'low' // Default
+                    }));
+
+                    if (accountUpdates.length > 0) {
+                        const { error: accError } = await supabase
+                            .from('accounts')
+                            .upsert(accountUpdates, { onConflict: 'account_id', ignoreDuplicates: true });
+                        if (accError) throw accError;
+                    }
+
+                    // 3. Insert transactions
+                    const transactions = rows.map(row => ({
+                        transaction_ref: row.transaction_ref || crypto.randomUUID(),
+                        sender_id: row.sender_id,
+                        receiver_id: row.receiver_id,
+                        amount: parseFloat(row.amount),
+                        currency: row.currency || 'USD',
+                        timestamp: row.timestamp || new Date().toISOString(),
+                        risk_score: 0,
+                        is_flagged: false
+                    }));
+
+                    const { error: txError } = await supabase.from('transactions').insert(transactions);
+                    if (txError) throw txError;
+
+                    toast.success(`Successfully uploaded ${transactions.length} transactions`);
+                    window.location.reload();
+
+                } catch (error: any) {
+                    console.error("Upload error:", error);
+                    toast.error("Upload failed: " + error.message);
+                } finally {
+                    setUploading(false);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                }
+            },
+            error: (error) => {
+                toast.error("CSV Parse Error");
+                setUploading(false);
+            }
+        });
+    };
+
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
+        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display transition-colors duration-300">
             <header className="sticky top-0 z-50 glass border-b border-white/10 px-6 py-3">
                 <div className="max-w-[1400px] mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -19,7 +95,6 @@ const Dashboard = () => {
                         <Link className="text-slate-400 hover:text-white transition-colors text-sm font-medium" to="/transactions">Transactions</Link>
                         <Link className="text-slate-400 hover:text-white transition-colors text-sm font-medium" to="/fraud-summary">Fraud Summary</Link>
                         <Link className="text-slate-400 hover:text-white transition-colors text-sm font-medium" to="/analytics">Analytics</Link>
-                        <Link className="text-slate-400 hover:text-white transition-colors text-sm font-medium" to="/settings">Settings</Link>
                     </nav>
                     <div className="flex items-center gap-4">
                         <ModeToggle />
@@ -46,7 +121,7 @@ const Dashboard = () => {
                             <span className="material-symbols-outlined text-primary/50">payments</span>
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold">12,847</h3>
+                            <h3 className="text-2xl font-bold">{loading ? "..." : stats.totalTransactions}</h3>
                             <p className="text-emerald-400 text-xs font-medium mt-1 flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px]">trending_up</span> +12.4% vs last week
                             </p>
@@ -58,7 +133,7 @@ const Dashboard = () => {
                             <span className="material-symbols-outlined text-red-500/50">warning</span>
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold">23</h3>
+                            <h3 className="text-2xl font-bold">{loading ? "..." : stats.flaggedAccounts}</h3>
                             <p className="text-red-400 text-xs font-medium mt-1">Immediate action required</p>
                         </div>
                     </div>
@@ -80,7 +155,7 @@ const Dashboard = () => {
                             <span className="material-symbols-outlined text-primary/50">schedule</span>
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold">2h ago</h3>
+                            <h3 className="text-2xl font-bold">{stats.lastScan}</h3>
                             <p className="text-slate-500 text-xs mt-1">Automated daily check</p>
                         </div>
                     </div>
@@ -143,21 +218,40 @@ const Dashboard = () => {
                                 <span className="material-symbols-outlined text-primary">upload_file</span>
                                 Data Ingestion
                             </h2>
-                            <div className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-all group">
-                                <div className="bg-primary/20 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                                    <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
-                                </div>
-                                <h4 className="text-sm font-bold">Drag and drop CSV files</h4>
-                                <p className="text-xs text-slate-500 mt-1">Supports bulk transaction logs up to 50MB</p>
-                                <button className="mt-6 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-colors">Select Files</button>
+                            <div
+                                className="border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-all group relative"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept=".csv"
+                                    onChange={handleFileUpload}
+                                />
+                                {uploading ? (
+                                    <div className="flex flex-col items-center">
+                                        <span className="material-symbols-outlined animate-spin text-3xl text-primary">progress_activity</span>
+                                        <p className="text-sm font-bold mt-2">Uploading...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="bg-primary/20 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                                            <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+                                        </div>
+                                        <h4 className="text-sm font-bold">Drag and drop CSV files</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Supports bulk transaction logs up to 50MB</p>
+                                        <button className="mt-6 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-colors">Select Files</button>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className="glass rounded-xl overflow-hidden">
                             <div className="p-4 border-b border-white/10 flex justify-between items-center">
                                 <h2 className="text-sm font-bold">Transaction Preview</h2>
-                                <button className="gradient-btn px-4 py-1.5 rounded-lg text-[11px] font-bold text-background-dark uppercase tracking-wider">
-                                    Upload to Database
-                                </button>
+                                <Link to="/transactions" className="gradient-btn px-4 py-1.5 rounded-lg text-[11px] font-bold text-background-dark uppercase tracking-wider block">
+                                    View All
+                                </Link>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
@@ -171,103 +265,37 @@ const Dashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        <tr className="hover:bg-white/5 transition-colors">
-                                            <td className="px-4 py-4 font-medium">Acct-9821-X</td>
-                                            <td className="px-4 py-4">Acct-0042-B</td>
-                                            <td className="px-4 py-4 text-right font-bold text-primary">$4,200.00</td>
-                                            <td className="px-4 py-4 text-slate-500">2023-10-24 14:22</td>
-                                            <td className="px-4 py-4 text-center">
-                                                <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px] font-bold">Low</span>
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-white/5 transition-colors bg-red-500/5">
-                                            <td className="px-4 py-4 font-medium">Acct-4492-Z</td>
-                                            <td className="px-4 py-4">Acct-3310-P</td>
-                                            <td className="px-4 py-4 text-right font-bold text-primary">$8,900.00</td>
-                                            <td className="px-4 py-4 text-slate-500">2023-10-24 14:30</td>
-                                            <td className="px-4 py-4 text-center">
-                                                <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold">High</span>
-                                            </td>
-                                        </tr>
+                                        {loading ? (
+                                            <tr><td colSpan={5} className="p-4 text-center">Loading...</td></tr>
+                                        ) : stats.recentTransactions.map((tx) => (
+                                            <tr key={tx.id} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-4 py-4 font-medium truncate max-w-[100px]">{tx.sender?.account_name || tx.sender_id}</td>
+                                                <td className="px-4 py-4 truncate max-w-[100px]">{tx.receiver?.account_name || tx.receiver_id}</td>
+                                                <td className="px-4 py-4 text-right font-bold text-primary">
+                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
+                                                </td>
+                                                <td className="px-4 py-4 text-slate-500">{new Date(tx.timestamp).toLocaleDateString()}</td>
+                                                <td className="px-4 py-4 text-center">
+                                                    {tx.is_flagged ? (
+                                                        <span className="bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold">High</span>
+                                                    ) : (
+                                                        <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px] font-bold">Low</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="glass rounded-xl overflow-hidden min-h-[700px] flex flex-col">
-                    <div className="p-6 border-b border-white/10 flex flex-wrap justify-between items-center gap-4">
-                        <div>
-                            <h2 className="text-lg font-bold">Transaction Network Graph</h2>
-                            <p className="text-xs text-slate-500 mt-1">Visualization of account relationships and fund flow patterns</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border-white/5">
-                                <span className="size-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(6,220,249,0.5)]"></span> Normal
-                            </div>
-                            <div className="flex items-center gap-2 glass px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border-white/5">
-                                <span className="size-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Flagged
-                            </div>
-                            <div className="h-6 w-[1px] bg-white/10"></div>
-                            <div className="flex bg-white/5 p-1 rounded-lg">
-                                <button className="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span className="material-symbols-outlined text-sm">zoom_in</span></button>
-                                <button className="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span className="material-symbols-outlined text-sm">zoom_out</span></button>
-                                <button className="p-1.5 hover:bg-white/10 rounded-md transition-colors"><span className="material-symbols-outlined text-sm">filter_list</span></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="relative flex-1 bg-[radial-gradient(circle_at_center,#1e293b_0%,#14161F_100%)] overflow-hidden">
-                        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#06dcf9 1px, transparent 1px), linear-gradient(90deg, #06dcf9 1px, transparent 1px)", backgroundSize: "40px 40px" }}></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <svg className="w-full h-full" viewBox="0 0 1000 600">
-                                <line stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" x1="500" x2="420" y1="300" y2="200"></line>
-                                <line stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" x1="500" x2="580" y1="300" y2="200"></line>
-                                <line stroke="#ef4444" strokeDasharray="4" strokeWidth="1.5" x1="500" x2="420" y1="300" y2="400"></line>
-                                <line stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" x1="500" x2="580" y1="300" y2="400"></line>
-                                <line stroke="#ef4444" strokeWidth="2" x1="420" x2="340" y1="400" y2="480"></line>
-                                <circle cx="500" cy="300" fill="#06dcf9" fillOpacity="0.8" r="14"></circle>
-                                <circle cx="420" cy="200" fill="#06dcf9" fillOpacity="0.6" r="10"></circle>
-                                <circle cx="580" cy="200" fill="#06dcf9" fillOpacity="0.6" r="10"></circle>
-                                <circle cx="580" cy="400" fill="#06dcf9" fillOpacity="0.6" r="10"></circle>
-                                <circle className="animate-pulse" cx="420" cy="400" fill="#ef4444" r="12"></circle>
-                                <circle cx="340" cy="480" fill="#ef4444" fillOpacity="0.9" r="10"></circle>
-                                <text fill="white" fontSize="10" fontWeight="bold" x="518" y="305">Root Acct</text>
-                                <text fill="#ef4444" fontSize="10" fontWeight="bold" x="365" y="405">Mule-01</text>
-                            </svg>
-                        </div>
-                        <div className="absolute bottom-6 left-6 glass p-4 rounded-xl max-w-xs border border-white/20">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="size-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-red-500 text-lg">error</span>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold">Detected Mule Cluster</p>
-                                    <p className="text-[10px] text-slate-400">Node ID: Acct-3310-P</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 mt-3">
-                                <div className="bg-white/5 rounded p-2">
-                                    <p className="text-[9px] text-slate-500 uppercase font-bold">Connections</p>
-                                    <p className="text-xs font-bold">14 High-risk</p>
-                                </div>
-                                <div className="bg-white/5 rounded p-2">
-                                    <p className="text-[9px] text-slate-500 uppercase font-bold">Volume</p>
-                                    <p className="text-xs font-bold">$1.2M / 24h</p>
-                                </div>
-                            </div>
-                            <button className="w-full mt-3 py-1.5 bg-red-500 hover:bg-red-600 rounded text-[10px] font-bold uppercase tracking-wider transition-colors">Freeze Network</button>
-                        </div>
-                    </div>
+                {/* Graph removed from Dashboard to keep it clean, available in Analysis/Graph page? Or keep as SVG placeholder? Keeping placeholder for now as it's just a demo */}
+                <div className="glass rounded-xl overflow-hidden min-h-[500px] flex flex-col items-center justify-center p-10">
+                    <p className="text-slate-500">Graph visualization moved to dedicated Engine page</p>
+                    <Link to="/analytics" className="mt-4 px-6 py-2 bg-primary text-background-dark font-bold rounded-lg hover:bg-primary/90">Go to Graph Engine</Link>
                 </div>
             </main>
-            <footer className="max-w-[1400px] mx-auto p-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-xs">
-                <p>© 2023 Chain-Trace AI Platform. All rights reserved.</p>
-                <div className="flex gap-6">
-                    <Link className="hover:text-primary transition-colors" to="/privacy">Privacy Policy</Link>
-                    <Link className="hover:text-primary transition-colors" to="/status">System Status</Link>
-                    <Link className="hover:text-primary transition-colors" to="/contact">Contact Intelligence Team</Link>
-                </div>
-            </footer>
         </div>
     );
 };
