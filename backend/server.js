@@ -13,6 +13,16 @@ const PORT = process.env.PORT || 3000;
 
 console.log('App created');
 
+// Middleware to set permissive CSP
+app.use((_req, res, next) => {
+    res.setHeader(
+        "Content-Security-Policy",
+        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+    );
+    next();
+});
+
+
 // Serve static files from the dist directory
 try {
     const distPath = path.join(__dirname, 'dist');
