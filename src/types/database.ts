@@ -30,20 +30,47 @@ export interface Transaction {
 }
 
 export interface FraudAlert {
-    id: string;
-    transaction_id: string;
+    id: string; // UUID
+    transaction_id?: string; // UUID
     alert_type: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     message: string;
-    details: any;
+    details?: any; // JSONB
     is_resolved: boolean;
-    created_at: string;
-    transaction?: Transaction;
+    resolved_at?: string; // ISO timestamp
+    resolved_by?: string;
+    created_at: string; // ISO timestamp
 }
 
 export interface Report {
+    id: string; // UUID
+    generated_at: string; // ISO timestamp
+    title: string;
+    summary: string;
+    total_flagged: number;
+    avg_risk_score: number;
+    details?: any; // JSONB
+}
+
+export interface FraudRing {
     id: string;
-    report_type: string;
-    generated_at: string;
-    details: any; // JSONB containing stats like total_flagged, avg_risk_score
+    ring_type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    accounts: string[];
+    transactions: string[];
+    total_amount: number;
+    description: string;
+    created_at: string;
+    details?: any;
+}
+
+export interface SuspiciousAccount {
+    id: string;
+    account_id: string;
+    suspicion_score: number;
+    risk_label: 'clean' | 'low' | 'moderate' | 'high' | 'critical';
+    transaction_count: number;
+    total_volume: number;
+    created_at: string;
+    analysis_id?: string;
 }

@@ -37,20 +37,20 @@ export function useTransactions() {
 }
 
 export function useFraudSummary() {
-    const [alerts, setAlerts] = useState<FraudAlert[]>([]);
-    const [reports, setReports] = useState<Report[]>([]);
+    const [rings, setRings] = useState<any[]>([]);
+    const [suspiciousAccounts, setSuspiciousAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchData() {
             try {
-                const [alertsRes, reportsRes] = await Promise.all([
-                    supabase.from('fraud_alerts').select('*').order('created_at', { ascending: false }).limit(50),
-                    supabase.from('reports').select('*').order('created_at', { ascending: false }).limit(1)
+                const [ringsRes, accountsRes] = await Promise.all([
+                    supabase.from('fraud_rings').select('*').order('created_at', { ascending: false }).limit(20),
+                    supabase.from('suspicious_accounts').select('*').order('suspicion_score', { ascending: false }).limit(20)
                 ]);
 
-                if (alertsRes.data) setAlerts(alertsRes.data);
-                if (reportsRes.data) setReports(reportsRes.data);
+                if (ringsRes.data) setRings(ringsRes.data);
+                if (accountsRes.data) setSuspiciousAccounts(accountsRes.data);
             } catch (err) {
                 console.error('Error fetching summary:', err);
             } finally {
@@ -61,7 +61,7 @@ export function useFraudSummary() {
         fetchData();
     }, []);
 
-    return { alerts, reports, loading };
+    return { rings, suspiciousAccounts, loading };
 }
 
 export function useDashboardStats() {
