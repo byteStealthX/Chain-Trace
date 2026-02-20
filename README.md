@@ -103,7 +103,7 @@ If you are **not** using the "Blueprint" feature (i.e. you created services manu
     - Go to **Settings > Build & Deploy**.
     - Set **Root Directory** to `frontend`.
     - Set **Build Command** to `npm install && npm run build`.
-    - Set **Publish Directory** to `dist`.
+    - Set **Publish Directory** to `dist`. (Do NOT set to `build` - Vite outputs to `dist`!)
     - **Add Rewrite Rule** (under Redirects/Rewrites):
         - **Source**: `/*`
         - **Destination**: `/index.html`
